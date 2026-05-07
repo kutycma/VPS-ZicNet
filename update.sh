@@ -241,16 +241,47 @@ sync_from_git() {
     clean_untracked_files
 }
 
-prepare_directories() {
-    log "Preparing writable directories"
-    mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
-    chmod -R ug+rw storage bootstrap/cache
+detect_web_owner() {
+    local candidate
 
-    local web_user="${WEB_USER:-www-data}"
-    local web_group="${WEB_GROUP:-$web_user}"
-    if [[ "${EUID:-$(id -u)}" -eq 0 ]] && id "$web_user" >/dev/null 2>&1; then
-        chown -R "$web_user:$web_group" storage bootstrap/cache public || true
+    if [[ -z "${WEB_USER:-}" ]]; then
+        for candidate in www www-data nginx apache; do
+            if id "$candidate" >/dev/null 2>&1; then
+                WEB_USER="$candidate"
+                break
+            fi
+        done
+        WEB_USER="${WEB_USER:-$(id -un)}"
     fi
+
+    if [[ -z "${WEB_GROUP:-}" ]]; then
+        if getent group "$WEB_USER" >/dev/null 2>&1; then
+            WEB_GROUP="$WEB_USER"
+        else
+            WEB_GROUP="$(id -gn "$WEB_USER" 2>/dev/null || id -gn)"
+        fi
+    fi
+}
+
+fix_runtime_permissions() {
+    detect_web_owner
+
+    mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+    touch storage/logs/laravel.log
+
+    chmod -R u+rwX,g+rwX storage bootstrap/cache
+    find storage bootstrap/cache -type d -exec chmod 775 {} + 2>/dev/null || true
+    find storage bootstrap/cache -type f -exec chmod 664 {} + 2>/dev/null || true
+
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]] && id "$WEB_USER" >/dev/null 2>&1; then
+        chown -R "$WEB_USER:$WEB_GROUP" storage bootstrap/cache || true
+    fi
+}
+
+prepare_directories() {
+    detect_web_owner
+    log "Preparing writable directories for web user ${WEB_USER}:${WEB_GROUP}"
+    fix_runtime_permissions
 }
 
 install_php_dependencies() {
@@ -334,6 +365,7 @@ run_laravel_update() {
     run_artisan queue:restart || true
     run_artisan up || true
     APP_WAS_DOWNED=0
+    fix_runtime_permissions
 }
 
 main() {
@@ -342,6 +374,7 @@ main() {
     prepare_directories
     install_php_dependencies
     run_laravel_update
+    fix_runtime_permissions
     log "Update completed from ${GIT_REMOTE}/${GIT_BRANCH}"
 }
 
