@@ -26,9 +26,9 @@ Options:
 Useful environment variables:
   APP_NAME APP_ENV APP_DEBUG APP_URL
   DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD
-  MYSQL_ADMIN_USER MYSQL_ADMIN_PASSWORD
   ADMIN_NAME ADMIN_EMAIL ADMIN_PASSWORD
   INSTALL_DB_SERVER INSTALL_DEV WEB_USER WEB_GROUP
+  MYSQL_ADMIN_USER MYSQL_ADMIN_PASSWORD  Advanced: only needed if MySQL root has a password.
 EOF
 }
 
@@ -271,6 +271,12 @@ sql_escape() {
     printf '%s' "$1" | sed "s/'/''/g"
 }
 
+run_mysql_sql() {
+    local sql="$1"
+    shift
+    printf '%s\n' "$sql" | "$@"
+}
+
 create_database() {
     if [[ "$SKIP_DB_CREATE" == "1" ]]; then
         warn "Skipping database creation by request."
@@ -289,30 +295,14 @@ create_database() {
     validate_mysql_identifier "$DB_DATABASE"
     validate_mysql_identifier "$DB_USERNAME"
 
-    prompt_value MYSQL_ADMIN_USER "MySQL admin user" "root"
-    prompt_secret MYSQL_ADMIN_PASSWORD "MySQL admin password" ""
+    MYSQL_ADMIN_USER="${MYSQL_ADMIN_USER:-root}"
 
     log "Creating/updating MySQL database and database user"
     local db_password_escaped
     db_password_escaped="$(sql_escape "$DB_PASSWORD")"
 
-    local mysql_cmd=("$mysql_binary")
-    local mysql_args=(-h "$DB_HOST" -P "$DB_PORT" -u "$MYSQL_ADMIN_USER" --protocol=tcp)
-
-    if [[ "$MYSQL_ADMIN_USER" == "root" && -z "${MYSQL_ADMIN_PASSWORD:-}" ]]; then
-        if is_local_db_host; then
-            mysql_args=(-u "$MYSQL_ADMIN_USER")
-            if [[ -n "$SUDO" ]]; then
-                mysql_cmd=($SUDO mysql)
-            fi
-        fi
-    fi
-
-    if [[ -n "${MYSQL_ADMIN_PASSWORD:-}" ]]; then
-        mysql_args+=("-p${MYSQL_ADMIN_PASSWORD}")
-    fi
-
-    "${mysql_cmd[@]}" "${mysql_args[@]}" <<SQL
+    local sql
+    sql="$(cat <<SQL
 CREATE DATABASE IF NOT EXISTS \`${DB_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${db_password_escaped}';
 CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'localhost' IDENTIFIED BY '${db_password_escaped}';
@@ -322,6 +312,33 @@ GRANT ALL PRIVILEGES ON \`${DB_DATABASE}\`.* TO '${DB_USERNAME}'@'%';
 GRANT ALL PRIVILEGES ON \`${DB_DATABASE}\`.* TO '${DB_USERNAME}'@'localhost';
 FLUSH PRIVILEGES;
 SQL
+)"
+
+    local db_created=0
+
+    if [[ -n "${MYSQL_ADMIN_PASSWORD:-}" ]]; then
+        if run_mysql_sql "$sql" "$mysql_binary" -h "$DB_HOST" -P "$DB_PORT" -u "$MYSQL_ADMIN_USER" "-p${MYSQL_ADMIN_PASSWORD}" --protocol=tcp; then
+            db_created=1
+        fi
+    elif is_local_db_host; then
+        if run_mysql_sql "$sql" "$mysql_binary" -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
+            db_created=1
+        elif command -v mariadb >/dev/null 2>&1 && run_mysql_sql "$sql" mariadb -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
+            db_created=1
+        elif command -v sudo >/dev/null 2>&1 && run_mysql_sql "$sql" sudo "$mysql_binary" -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
+            db_created=1
+        elif command -v sudo >/dev/null 2>&1 && command -v mariadb >/dev/null 2>&1 && run_mysql_sql "$sql" sudo mariadb -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
+            db_created=1
+        elif [[ -n "$SUDO" ]] && run_mysql_sql "$sql" $SUDO "$mysql_binary" -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
+            db_created=1
+        elif [[ -r /etc/mysql/debian.cnf ]] && run_mysql_sql "$sql" "$mysql_binary" --defaults-extra-file=/etc/mysql/debian.cnf >/dev/null 2>&1; then
+            db_created=1
+        fi
+    fi
+
+    if [[ "$db_created" != "1" ]]; then
+        fail "Cannot auto-create the database with local MySQL defaults. If MySQL has a root password, rerun with MYSQL_ADMIN_PASSWORD='your-root-password' bash install.sh. If the database already exists, rerun with --skip-db-create."
+    fi
 }
 
 env_format() {
