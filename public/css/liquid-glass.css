@@ -710,25 +710,18 @@ body.liquid-glass-auth ::-webkit-scrollbar-track {
     background: transparent;
 }
 
-/* Stronger transparent glass layer. */
+/* Sharp transparent glass layer: transparent surfaces without blurring content. */
 body.liquid-glass-app {
     background:
-        radial-gradient(circle at 14% 18%, rgba(0, 122, 255, 0.22), transparent 26%),
-        radial-gradient(circle at 82% 12%, rgba(48, 209, 88, 0.16), transparent 24%),
-        radial-gradient(circle at 60% 72%, rgba(175, 82, 222, 0.18), transparent 30%),
-        linear-gradient(135deg, #eef7ff 0%, #f7fbff 36%, #f4f1ff 68%, #eef9f4 100%) !important;
+        radial-gradient(circle at 12% 18%, rgba(0, 122, 255, 0.18), transparent 26%),
+        radial-gradient(circle at 84% 12%, rgba(48, 209, 88, 0.14), transparent 25%),
+        radial-gradient(circle at 56% 76%, rgba(175, 82, 222, 0.16), transparent 30%),
+        linear-gradient(135deg, #eff9ff 0%, #f8fbff 38%, #f8f2ff 68%, #effaf4 100%) !important;
     background-attachment: fixed !important;
 }
 
 body.liquid-glass-app::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-        linear-gradient(115deg, rgba(255, 255, 255, 0.20), transparent 32%, rgba(255, 255, 255, 0.12) 64%, transparent),
-        radial-gradient(circle at 48% 0%, rgba(255, 255, 255, 0.72), transparent 34%);
+    display: none !important;
 }
 
 body.liquid-glass-app .content-wrapper,
@@ -737,49 +730,49 @@ body.liquid-glass-app .wrapper {
 }
 
 body.liquid-glass-app .content-wrapper {
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app .main-header.navbar,
 body.liquid-glass-app .main-header .navbar,
 body.liquid-glass-basic .navbar {
-    background: rgba(255, 255, 255, 0.28) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.48) !important;
-    box-shadow: 0 12px 34px rgba(34, 43, 69, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.56) !important;
-    -webkit-backdrop-filter: blur(34px) saturate(190%) !important;
-    backdrop-filter: blur(34px) saturate(190%) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.44) !important;
+    box-shadow: 0 10px 28px rgba(34, 43, 69, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.52) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app .main-sidebar,
 body.liquid-glass-app .main-sidebar.elevation-4 {
     background:
-        linear-gradient(160deg, rgba(255, 255, 255, 0.34), rgba(235, 246, 255, 0.22) 48%, rgba(245, 239, 255, 0.28)) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.48) !important;
-    box-shadow: 14px 0 42px rgba(34, 43, 69, 0.08), inset -1px 0 0 rgba(255, 255, 255, 0.34) !important;
-    -webkit-backdrop-filter: blur(44px) saturate(210%) !important;
-    backdrop-filter: blur(44px) saturate(210%) !important;
+        linear-gradient(160deg, rgba(255, 255, 255, 0.20), rgba(235, 246, 255, 0.10) 48%, rgba(245, 239, 255, 0.14)) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.44) !important;
+    box-shadow: 12px 0 32px rgba(34, 43, 69, 0.06), inset -1px 0 0 rgba(255, 255, 255, 0.32) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app .brand-link,
 body.liquid-glass-app .user-panel-sidebar {
-    background: rgba(255, 255, 255, 0.10) !important;
-    border-color: rgba(255, 255, 255, 0.36) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.30) !important;
 }
 
 body.liquid-glass-app .nav-sidebar .nav-link:hover {
-    background: rgba(255, 255, 255, 0.24) !important;
-    border-color: rgba(255, 255, 255, 0.46) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.40) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app .nav-sidebar .nav-link.active {
     background:
-        linear-gradient(135deg, rgba(0, 122, 255, 0.72), rgba(90, 200, 250, 0.54) 54%, rgba(175, 82, 222, 0.62)) !important;
-    box-shadow: 0 14px 34px rgba(0, 122, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.48) !important;
-    -webkit-backdrop-filter: blur(22px) saturate(190%);
-    backdrop-filter: blur(22px) saturate(190%);
+        linear-gradient(135deg, rgba(0, 122, 255, 0.78), rgba(90, 200, 250, 0.60) 54%, rgba(175, 82, 222, 0.70)) !important;
+    box-shadow: 0 12px 28px rgba(0, 122, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.52) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app .card,
@@ -788,68 +781,82 @@ body.liquid-glass-app .callout,
 body.liquid-glass-app .modal-content,
 body.liquid-glass-basic .card {
     background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.54) !important;
-    box-shadow: 0 20px 58px rgba(34, 43, 69, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.62) !important;
-    -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
-    backdrop-filter: blur(36px) saturate(190%) !important;
+        linear-gradient(145deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.44) !important;
+    box-shadow: 0 18px 46px rgba(34, 43, 69, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app .card-header,
 body.liquid-glass-app .card-footer,
 body.liquid-glass-basic .card-header,
 body.liquid-glass-basic .card-footer {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-color: rgba(255, 255, 255, 0.34) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.28) !important;
 }
 
 body.liquid-glass-app .table thead th {
-    background: rgba(255, 255, 255, 0.16) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
 }
 
 body.liquid-glass-app .table tbody tr {
-    background: rgba(255, 255, 255, 0.06) !important;
+    background: transparent !important;
 }
 
 body.liquid-glass-app .stat-card {
-    border: 1px solid rgba(255, 255, 255, 0.58) !important;
-    box-shadow: 0 22px 58px rgba(34, 43, 69, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.52) !important;
-    -webkit-backdrop-filter: blur(34px) saturate(190%) !important;
-    backdrop-filter: blur(34px) saturate(190%) !important;
+    color: var(--lg-ink) !important;
+    border: 1px solid rgba(255, 255, 255, 0.50) !important;
+    box-shadow: 0 18px 44px rgba(34, 43, 69, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.58) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+body.liquid-glass-app .stat-card p,
+body.liquid-glass-app .stat-card h3 {
+    color: var(--lg-ink) !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 1;
+}
+
+body.liquid-glass-app .stat-card .stat-icon {
+    color: rgba(18, 23, 38, 0.22) !important;
+    opacity: 1 !important;
 }
 
 body.liquid-glass-app .stat-card[style*="#6366f1"] {
     background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.10)),
-        linear-gradient(135deg, rgba(99, 102, 241, 0.52), rgba(139, 92, 246, 0.30)) !important;
+        linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+        linear-gradient(135deg, rgba(99, 102, 241, 0.34), rgba(139, 92, 246, 0.18)) !important;
 }
 
 body.liquid-glass-app .stat-card[style*="#10b981"] {
     background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.10)),
-        linear-gradient(135deg, rgba(16, 185, 129, 0.48), rgba(5, 150, 105, 0.28)) !important;
+        linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+        linear-gradient(135deg, rgba(16, 185, 129, 0.30), rgba(5, 150, 105, 0.16)) !important;
 }
 
 body.liquid-glass-app .stat-card[style*="#f59e0b"] {
     background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.10)),
-        linear-gradient(135deg, rgba(245, 158, 11, 0.52), rgba(217, 119, 6, 0.30)) !important;
+        linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+        linear-gradient(135deg, rgba(245, 158, 11, 0.32), rgba(217, 119, 6, 0.18)) !important;
 }
 
 body.liquid-glass-app .dropdown-menu,
 body.liquid-glass-basic .dropdown-menu {
-    background: rgba(255, 255, 255, 0.36) !important;
-    border: 1px solid rgba(255, 255, 255, 0.54) !important;
-    -webkit-backdrop-filter: blur(34px) saturate(190%) !important;
-    backdrop-filter: blur(34px) saturate(190%) !important;
+    background: rgba(255, 255, 255, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.44) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app .alert,
 body.liquid-glass-basic .alert {
-    background: rgba(255, 255, 255, 0.30) !important;
-    border-color: rgba(255, 255, 255, 0.54) !important;
-    -webkit-backdrop-filter: blur(30px) saturate(185%) !important;
-    backdrop-filter: blur(30px) saturate(185%) !important;
+    background: rgba(255, 255, 255, 0.22) !important;
+    border-color: rgba(255, 255, 255, 0.44) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.liquid-glass-app a:focus-visible,
