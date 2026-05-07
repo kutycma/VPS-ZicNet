@@ -26,7 +26,7 @@ Options:
 Useful environment variables:
   APP_NAME APP_ENV APP_DEBUG APP_URL
   DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD
-  MYSQL_ADMIN_USER MYSQL_ADMIN_PASSWORD CREATE_DATABASE
+  MYSQL_ADMIN_USER MYSQL_ADMIN_PASSWORD
   ADMIN_NAME ADMIN_EMAIL ADMIN_PASSWORD
   INSTALL_DB_SERVER INSTALL_DEV WEB_USER WEB_GROUP
 EOF
@@ -273,11 +273,7 @@ sql_escape() {
 
 create_database() {
     if [[ "$SKIP_DB_CREATE" == "1" ]]; then
-        return
-    fi
-
-    prompt_yes_no CREATE_DATABASE "Create/update MySQL database and user now?" "yes"
-    if ! is_yes "$CREATE_DATABASE"; then
+        warn "Skipping database creation by request."
         return
     fi
 
@@ -296,7 +292,7 @@ create_database() {
     prompt_value MYSQL_ADMIN_USER "MySQL admin user" "root"
     prompt_secret MYSQL_ADMIN_PASSWORD "MySQL admin password" ""
 
-    log "Creating MySQL database and user"
+    log "Creating/updating MySQL database and database user"
     local db_password_escaped
     db_password_escaped="$(sql_escape "$DB_PASSWORD")"
 
@@ -478,16 +474,18 @@ main() {
     prompt_value DB_USERNAME "Database user" "$(env_file_value DB_USERNAME "vps_zicnet")"
     prompt_secret DB_PASSWORD "Database password" "$(env_file_value DB_PASSWORD "$(random_hex)")"
 
-    prompt_value ADMIN_NAME "Admin name" "$(env_file_value ADMIN_NAME "Administrator")"
-    prompt_value ADMIN_EMAIL "Admin email" "$(env_file_value ADMIN_EMAIL "admin@zicnet.vn")"
-    prompt_secret ADMIN_PASSWORD "Admin password" "$(random_hex)"
-
     install_apt_packages
     install_composer
     require_cmd php
     require_cmd composer
 
     create_database
+
+    log "Database is ready. Create the admin account"
+    prompt_value ADMIN_NAME "Admin name" "$(env_file_value ADMIN_NAME "Administrator")"
+    prompt_value ADMIN_EMAIL "Admin email" "$(env_file_value ADMIN_EMAIL "admin@zicnet.vn")"
+    prompt_secret ADMIN_PASSWORD "Admin password" "$(env_file_value ADMIN_PASSWORD "$(random_hex)")"
+
     prepare_env
     prepare_directories
     install_php_dependencies
