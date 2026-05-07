@@ -7,7 +7,6 @@ cd "$ROOT_DIR"
 
 NON_INTERACTIVE="${NON_INTERACTIVE:-0}"
 SKIP_APT="${SKIP_APT:-0}"
-BUILD_ASSETS="${BUILD_ASSETS:-0}"
 INSTALL_DEV="${INSTALL_DEV:-0}"
 PHP_VERSION_TARGET="${PHP_VERSION_TARGET:-7.4}"
 PHP_BIN="${PHP_BIN:-}"
@@ -25,14 +24,13 @@ Simple fresh install:
 Options:
   --non-interactive   Use environment variables and defaults, do not prompt.
   --skip-apt          Do not install system packages with apt-get.
-  --build-assets      Run npm install/build. Default is no frontend build.
   -h, --help          Show this help.
 
 Environment variables:
   APP_URL
   DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD
   ADMIN_EMAIL ADMIN_PASSWORD
-  INSTALL_DEV BUILD_ASSETS WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
+  INSTALL_DEV WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
 EOF
 }
 
@@ -40,8 +38,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --non-interactive) NON_INTERACTIVE=1 ;;
         --skip-apt) SKIP_APT=1 ;;
-        --build-assets) BUILD_ASSETS=1 ;;
-        --skip-assets) BUILD_ASSETS=0 ;;
+        --build-assets|--skip-assets) ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
     esac
@@ -381,24 +378,39 @@ install_php_dependencies() {
     run_composer "${composer_args[@]}"
 }
 
-build_assets() {
-    if [[ "$BUILD_ASSETS" != "1" || ! -f package.json ]]; then
-        return
-    fi
-
-    if ! command -v npm >/dev/null 2>&1; then
-        warn "npm not found. Skipping frontend asset build."
-        return
-    fi
-
-    log "Building frontend assets"
-    npm install
-    npm run production
-}
-
 run_artisan() {
     ensure_php_runtime
     "$PHP_BIN" artisan "$@"
+}
+
+prune_legacy_migrations() {
+    log "Removing legacy duplicate migrations"
+
+    local migration file keep
+    local keep_files=(
+        "2014_10_12_000000_create_platform_tables.php"
+        "2026_04_03_000000_create_vps_catalog_tables.php"
+        "2026_04_03_000100_create_vps_service_tables.php"
+        "2026_04_03_000200_create_billing_tables.php"
+        "2026_04_03_000300_create_support_tables.php"
+        "2026_04_03_000400_create_settings_and_theme_tables.php"
+        "2026_04_03_000500_create_coupon_tables.php"
+    )
+
+    find database/migrations -maxdepth 1 -type f -name '*.php' | while IFS= read -r migration; do
+        file="$(basename "$migration")"
+        keep=0
+        for expected in "${keep_files[@]}"; do
+            if [[ "$file" == "$expected" ]]; then
+                keep=1
+                break
+            fi
+        done
+
+        if [[ "$keep" == "0" ]]; then
+            rm -f "$migration"
+        fi
+    done
 }
 
 install_laravel() {
@@ -409,6 +421,7 @@ install_laravel() {
     run_artisan view:clear || true
 
     run_artisan key:generate --force
+    prune_legacy_migrations
     run_artisan migrate --force
 
     export ADMIN_NAME="${ADMIN_NAME:-Administrator}" ADMIN_EMAIL ADMIN_PASSWORD
@@ -443,7 +456,6 @@ main() {
     install_composer
     prepare_directories
     install_php_dependencies
-    build_assets
     install_laravel
 
     printf '\n'

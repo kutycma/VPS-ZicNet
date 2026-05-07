@@ -8,7 +8,6 @@ cd "$ROOT_DIR"
 GIT_REMOTE="${GIT_REMOTE:-origin}"
 GIT_BRANCH="${GIT_BRANCH:-}"
 SKIP_DEPS="${SKIP_DEPS:-0}"
-BUILD_ASSETS="${BUILD_ASSETS:-0}"
 SKIP_MIGRATE="${SKIP_MIGRATE:-0}"
 SKIP_BACKUP="${SKIP_BACKUP:-0}"
 INSTALL_DEV="${INSTALL_DEV:-0}"
@@ -28,14 +27,13 @@ Options:
   --branch <name>     Update from this branch instead of the current branch.
   --remote <name>     Git remote name. Default: origin.
   --skip-deps         Skip composer install.
-  --build-assets      Run npm install/build. Default is no frontend build.
   --skip-migrate      Skip php artisan migrate.
   --skip-backup       Do not backup local changes before overwriting them.
   -h, --help          Show this help.
 
 Useful environment variables:
   GIT_REMOTE GIT_BRANCH SKIP_DEPS SKIP_MIGRATE SKIP_BACKUP
-  INSTALL_DEV BUILD_ASSETS CACHE_ROUTES WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
+  INSTALL_DEV CACHE_ROUTES WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
 EOF
 }
 
@@ -52,8 +50,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --skip-deps) SKIP_DEPS=1 ;;
-        --build-assets) BUILD_ASSETS=1 ;;
-        --skip-assets) BUILD_ASSETS=0 ;;
+        --build-assets|--skip-assets) ;;
         --skip-migrate) SKIP_MIGRATE=1 ;;
         --skip-backup) SKIP_BACKUP=1 ;;
         -h|--help) usage; exit 0 ;;
@@ -263,24 +260,39 @@ install_php_dependencies() {
     run_composer "${composer_args[@]}"
 }
 
-build_assets() {
-    if [[ "$BUILD_ASSETS" != "1" || ! -f package.json ]]; then
-        return
-    fi
-
-    if ! command -v npm >/dev/null 2>&1; then
-        warn "npm not found. Skipping frontend asset build."
-        return
-    fi
-
-    log "Installing and building frontend assets"
-    npm install
-    npm run production
-}
-
 run_artisan() {
     ensure_php_runtime
     "$PHP_BIN" artisan "$@"
+}
+
+prune_legacy_migrations() {
+    log "Removing legacy duplicate migrations"
+
+    local migration file keep
+    local keep_files=(
+        "2014_10_12_000000_create_platform_tables.php"
+        "2026_04_03_000000_create_vps_catalog_tables.php"
+        "2026_04_03_000100_create_vps_service_tables.php"
+        "2026_04_03_000200_create_billing_tables.php"
+        "2026_04_03_000300_create_support_tables.php"
+        "2026_04_03_000400_create_settings_and_theme_tables.php"
+        "2026_04_03_000500_create_coupon_tables.php"
+    )
+
+    find database/migrations -maxdepth 1 -type f -name '*.php' | while IFS= read -r migration; do
+        file="$(basename "$migration")"
+        keep=0
+        for expected in "${keep_files[@]}"; do
+            if [[ "$file" == "$expected" ]]; then
+                keep=1
+                break
+            fi
+        done
+
+        if [[ "$keep" == "0" ]]; then
+            rm -f "$migration"
+        fi
+    done
 }
 
 run_laravel_update() {
@@ -298,6 +310,7 @@ run_laravel_update() {
     run_artisan view:clear || true
 
     if [[ "$SKIP_MIGRATE" != "1" ]]; then
+        prune_legacy_migrations
         run_artisan migrate --force
     fi
 
@@ -322,7 +335,6 @@ main() {
     sync_from_git
     prepare_directories
     install_php_dependencies
-    build_assets
     run_laravel_update
     log "Update completed from ${GIT_REMOTE}/${GIT_BRANCH}"
 }
