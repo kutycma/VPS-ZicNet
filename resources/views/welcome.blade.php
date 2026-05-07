@@ -69,10 +69,11 @@
             .nav-links { display: none; }
         }
     </style>
-    {{-- Theme CSS (injected LAST to override all base styles) --}}
+    {{-- Active theme CSS, followed by the Liquid Glass skin --}}
     {!! $themeCss ?? '' !!}
+    <link rel="stylesheet" href="{{ asset('css/liquid-glass.css') }}">
 </head>
-<body>
+<body class="liquid-glass-welcome">
     <nav>
         <div class="logo"><a href="/"><i class="fas fa-cloud"></i> ZicNet</a></div>
         <div class="nav-links">

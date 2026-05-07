@@ -11,12 +11,15 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+        $adminName = env('ADMIN_NAME', 'Administrator');
+        $adminEmail = env('ADMIN_EMAIL', 'admin@zicnet.vn');
+        $adminPassword = env('ADMIN_PASSWORD', 'admin@2026');
         // Tạo tài khoản Admin
         User::updateOrCreate(
-            ['email' => 'admin@zicnet.vn'],
+            ['email' => $adminEmail],
             [
-                'name' => 'Administrator',
-                'password' => Hash::make('admin@2026'),
+                'name' => $adminName,
+                'password' => Hash::make($adminPassword),
                 'role' => 'admin',
                 'balance' => 0,
                 'status' => 'active',
@@ -41,5 +44,7 @@ class DatabaseSeeder extends Seeder
                 $setting
             );
         }
+
+        $this->call(ThemeSeeder::class);
     }
 }

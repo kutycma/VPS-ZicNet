@@ -48,10 +48,11 @@
         .btn-danger { background: linear-gradient(135deg, var(--theme-danger, #ef4444), var(--theme-danger-dark, #dc2626)); border: none; border-radius: 8px; }
     </style>
     @stack('styles')
-    {{-- Theme CSS (injected LAST to override all base styles) --}}
+    {{-- Active theme CSS, followed by the Liquid Glass skin --}}
     {!! $themeCss ?? '' !!}
+    <link rel="stylesheet" href="{{ asset('css/liquid-glass.css') }}">
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed liquid-glass-app liquid-glass-admin">
 <div class="wrapper">
     <!-- Navbar -->
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">

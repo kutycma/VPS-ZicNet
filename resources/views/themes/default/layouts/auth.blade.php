@@ -136,10 +136,11 @@
         .forgot-link { color: var(--theme-primary-light, #818cf8); font-size: 0.85rem; text-decoration: none; }
         .forgot-link:hover { text-decoration: underline; }
     </style>
-    {{-- Theme CSS (injected LAST to override all base styles) --}}
+    {{-- Active theme CSS, followed by the Liquid Glass skin --}}
     {!! $themeCss ?? '' !!}
+    <link rel="stylesheet" href="{{ asset('css/liquid-glass.css') }}">
 </head>
-<body>
+<body class="liquid-glass-auth">
     <div class="auth-container">
         @yield('content')
     </div>
