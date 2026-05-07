@@ -52,7 +52,7 @@
     @stack('styles')
     {{-- Active theme CSS, followed by the Liquid Glass skin --}}
     {!! $themeCss ?? '' !!}
-    <link rel="stylesheet" href="{{ asset('css/liquid-glass.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/liquid-glass.css') }}?v={{ filemtime(public_path('css/liquid-glass.css')) }}">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed liquid-glass-app liquid-glass-client">
 <div class="wrapper">
@@ -193,7 +193,7 @@
                     </li>
 
                     @if(Auth::user()->isAdmin())
-                    <li class="nav-header">ADMIN</li>
+                    <li class="nav-header">{{ __('client.admin_section') }}</li>
                     <li class="nav-item">
                         <a href="{{ route('admin.dashboard') }}" class="nav-link" style="background:linear-gradient(135deg, var(--theme-danger, #ef4444), var(--theme-danger-dark, #dc2626)) !important;color:#fff !important;margin-top:5px;">
                             <i class="nav-icon fas fa-shield-alt"></i><p>{{ __('client.admin_panel') }}</p>

@@ -18,7 +18,7 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/liquid-glass.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/liquid-glass.css') }}?v={{ filemtime(public_path('css/liquid-glass.css')) }}" rel="stylesheet">
 </head>
 <body class="liquid-glass-basic">
     <div id="app">

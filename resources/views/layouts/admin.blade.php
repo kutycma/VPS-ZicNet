@@ -50,7 +50,7 @@
     @stack('styles')
     {{-- Active theme CSS, followed by the Liquid Glass skin --}}
     {!! $themeCss ?? '' !!}
-    <link rel="stylesheet" href="{{ asset('css/liquid-glass.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/liquid-glass.css') }}?v={{ filemtime(public_path('css/liquid-glass.css')) }}">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed liquid-glass-app liquid-glass-admin">
 <div class="wrapper">

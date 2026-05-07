@@ -38,7 +38,6 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --non-interactive) NON_INTERACTIVE=1 ;;
         --skip-apt) SKIP_APT=1 ;;
-        --build-assets|--skip-assets) ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
     esac
@@ -332,6 +331,8 @@ prepare_env() {
     set_env APP_ENV "${APP_ENV:-production}"
     set_env APP_DEBUG "${APP_DEBUG:-false}"
     set_env APP_URL "$APP_URL"
+    set_env APP_LOCALE "${APP_LOCALE:-vi}"
+    set_env APP_FALLBACK_LOCALE "${APP_FALLBACK_LOCALE:-en}"
     set_env LOG_CHANNEL "stack"
     set_env LOG_LEVEL "${LOG_LEVEL:-warning}"
 

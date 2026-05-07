@@ -11,6 +11,7 @@ return [
     'profile' => '个人资料',
     'billing' => '充值与交易',
     'support' => '技术支持',
+    'admin_section' => '管理',
     'admin_panel' => '管理后台',
     'top_up' => '充值',
     'logout' => '退出登录',

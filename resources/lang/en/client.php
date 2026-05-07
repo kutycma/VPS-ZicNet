@@ -11,6 +11,7 @@ return [
     'profile' => 'Profile',
     'billing' => 'Billing & Transactions',
     'support' => 'Support',
+    'admin_section' => 'ADMIN',
     'admin_panel' => 'Admin Panel',
     'top_up' => 'Top Up',
     'logout' => 'Logout',

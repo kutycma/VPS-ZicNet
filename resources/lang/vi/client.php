@@ -2,7 +2,7 @@
 
 return [
     // ========== LAYOUT / SIDEBAR ==========
-    'dashboard' => 'Dashboard',
+    'dashboard' => 'Bảng điều khiển',
     'services' => 'DỊCH VỤ',
     'buy_vps' => 'Mua VPS',
     'my_vps' => 'VPS của tôi',
@@ -11,6 +11,7 @@ return [
     'profile' => 'Hồ sơ cá nhân',
     'billing' => 'Nạp tiền & Giao dịch',
     'support' => 'Yêu cầu hỗ trợ',
+    'admin_section' => 'QUẢN TRỊ',
     'admin_panel' => 'Trang quản trị',
     'top_up' => 'Nạp tiền',
     'logout' => 'Đăng xuất',

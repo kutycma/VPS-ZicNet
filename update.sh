@@ -50,7 +50,6 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --skip-deps) SKIP_DEPS=1 ;;
-        --build-assets|--skip-assets) ;;
         --skip-migrate) SKIP_MIGRATE=1 ;;
         --skip-backup) SKIP_BACKUP=1 ;;
         -h|--help) usage; exit 0 ;;
