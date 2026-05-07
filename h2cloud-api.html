@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài Liệu HDSD API Agency - H2CLOUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: #4b5563;
+            text-decoration: none;
+            border-radius: 0.375rem;
+        }
+
+        .nav-link:hover {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+
+        .table-header {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .endpoint-url {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+        }
+
+        .method-get {
+            background-color: #10b981;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .method-post {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-white border-r border-gray-200 overflow-y-auto h-full hidden md:block flex-shrink-0">
+        <div class="p-4 border-b border-gray-200">
+            <h1 class="text-xl font-bold text-gray-800">H2CLOUD API </h1>
+            <p class="text-sm text-gray-500">Agency Documentation</p>
+        </div>
+        <nav class="p-4 space-y-1 text-sm">
+            <a href="#i-ket-noi" class="nav-link font-semibold">I. Kết nối API [cite: 2]</a>
+            <a href="#ii-chi-tiet-dai-ly" class="nav-link font-semibold">II. Chi tiết đại lý [cite: 2]</a>
+            <a href="#iii-thong-tin-san-pham" class="nav-link font-semibold">III. Lấy thông tin sản phẩm [cite: 2]</a>
+            <a href="#iv-nap-tien" class="nav-link font-semibold">IV. Nạp tiền vào số dư [cite: 2]</a>
+            <a href="#v-giao-dich" class="nav-link font-semibold">V. Giao dịch [cite: 2]</a>
+            <a href="#vi-vps-vn" class="nav-link font-semibold">VI. VPS VN [cite: 2]</a>
+            <a href="#vii-vps-nn" class="nav-link font-semibold">VII. VPS NN [cite: 2]</a>
+            <a href="#viii-proxy" class="nav-link font-semibold">VIII. PROXY [cite: 2]</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8">
+        <div class="max-w-4xl mx-auto space-y-12">
+
+            <div class="border-b pb-6">
+                <h1 class="text-3xl font-extrabold text-gray-900">TÀI LIỆU HƯỚNG DẪN SỬ DỤNG API AGENCY </h1>
+            </div>
+
+            <section id="i-ket-noi" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">I. KẾT NỐI API [cite: 6]</h2>
+                <div class="space-y-4">
+                    <p class="text-gray-600"><strong>a. Mô tả:</strong> Để sử dụng được toàn bộ tính năng của bộ API,
+                        quý khách phải tiến hành kết nối đến hệ thống để nhận mã kết nối[cite: 8, 9]. Thông tin kết nối
+                        của Agency được đã cung cấp[cite: 10]. Mỗi 2h và 14h hàng ngày mã kết nối sẽ đổi 1 lần[cite:
+                        11].</p>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="method-post">POST</span>
+                        <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/get-token</span> [cite: 14,
+                        15]
+                    </div>
+                    <p class="text-sm text-gray-500"><strong>Host:</strong> cloudserver.h2cloud.vn |
+                        <strong>Content-Type:</strong> application/json [cite: 16, 17]</p>
+
+                    <h4 class="font-semibold mt-4">Tham số Header [cite: 18]</h4>
+                    <table class="w-full text-sm border-collapse border border-gray-200 mt-2">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="border p-2">Tham số</th>
+                                <th class="border p-2">Kiểu dữ liệu</th>
+                                <th class="border p-2">Tính bắt buộc</th>
+                                <th class="border p-2">Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border p-2">api-username</td>
+                                <td class="border p-2">string</td>
+                                <td class="border p-2 text-center text-green-600">CÓ</td>
+                                <td class="border p-2">Được cung cấp bởi Admin</td>
+                            </tr> [cite: 20]
+                            <tr>
+                                <td class="border p-2">api-app</td>
+                                <td class="border p-2">string</td>
+                                <td class="border p-2 text-center text-green-600">CÓ</td>
+                                <td class="border p-2">Được cung cấp bởi Admin</td>
+                            </tr> [cite: 20]
+                            <tr>
+                                <td class="border p-2">api-secret</td>
+                                <td class="border p-2">string</td>
+                                <td class="border p-2 text-center text-green-600">CÓ</td>
+                                <td class="border p-2">Được cung cấp bởi Admin</td>
+                            </tr> [cite: 20]
+                        </tbody>
+                    </table>
+
+                    <h4 class="font-semibold mt-4">Example Response [cite: 21]</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-800 text-green-400 p-4 rounded text-sm font-mono">
+                            // + Thành công [cite: 22]<br>
+                            {<br>
+                            &nbsp;&nbsp;"error": 0, [cite: 24]<br>
+                            &nbsp;&nbsp;"auth-token": "mã kết nối" [cite: 25]<br>
+                            } [cite: 26]
+                        </div>
+                        <div class="bg-gray-800 text-red-400 p-4 rounded text-sm font-mono">
+                            // + Thất bại [cite: 28]<br>
+                            {<br>
+                            &nbsp;&nbsp;"error": 1, [cite: 30]<br>
+                            &nbsp;&nbsp;"message": "Nội dung lỗi" [cite: 31]<br>
+                            } [cite: 32]
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ii-chi-tiet-dai-ly" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">II. Chi tiết đại lý [cite: 33, 34]</h2>
+                <div class="space-y-4">
+                    <p class="text-gray-600"><strong>a. Mô tả:</strong> Lấy thông tin chi tiết của đại lý[cite: 36]. Gồm
+                        các thông tin như sau: thông tin đại lý, số dư tài khoản, tổng tiêu, tổng nạp, tổng số dịch
+                        vụ,... [cite: 37]</p>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="method-get">GET</span>
+                        <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/get-info</span> [cite: 40,
+                        41]
+                    </div>
+
+                    <h4 class="font-semibold mt-4">Tham số Header (Chung cho các Request yêu cầu Auth) [cite: 44]</h4>
+                    <table class="w-full text-sm border-collapse border border-gray-200 mt-2">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="border p-2">Tham số</th>
+                                <th class="border p-2">Kiểu dữ liệu</th>
+                                <th class="border p-2">Tính bắt buộc</th>
+                                <th class="border p-2">Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border p-2">content-Type</td>
+                                <td class="border p-2">application/json</td>
+                                <td class="border p-2 text-center text-green-600">CÓ</td>
+                                <td class="border p-2"></td>
+                            </tr> [cite: 45]
+                            <tr>
+                                <td class="border p-2">api-username, api-app, api-secret</td>
+                                <td class="border p-2">string</td>
+                                <td class="border p-2 text-center text-green-600">CÓ</td>
+                                <td class="border p-2">Được cung cấp bởi Admin [cite: 45]</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-2">auth-token</td>
+                                <td class="border p-2">string</td>
+                                <td class="border p-2 text-center text-green-600">CÓ</td>
+                                <td class="border p-2">Được lấy từ "mục I" [cite: 45]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="font-semibold mt-4">Example Response [cite: 47]</h4>
+                    <div class="bg-gray-800 text-gray-200 p-4 rounded text-sm font-mono">
+                        // + Thành công [cite: 48]<br>
+                        {<br>
+                        &nbsp;&nbsp;"error": 0, [cite: 51]<br>
+                        &nbsp;&nbsp;"message": "Lấy thông tin chi tiết đại lý thành công",<br>
+                        &nbsp;&nbsp;"data": { [cite: 52]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;"agency_name": "Tên đại lý", [cite: 53]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;"total_service": "Tổng số sản phẩm (long)", [cite: 54]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;"credit": "Số dư tài khoản (long)", [cite: 55]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;"total expenses": "Tổng tiêu (long)", [cite: 56]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;"total credit": "Tổng nạp (long)", [cite: 57]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;"service": "dữ liệu về tổng các dịch vụ" [cite: 58]<br>
+                        &nbsp;&nbsp;}<br>
+                        } [cite: 50]
+                    </div>
+                </div>
+            </section>
+
+            <section id="iii-thong-tin-san-pham" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">III. Lấy thông tin sản phẩm [cite: 65]</h2>
+
+                <div class="space-y-6">
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">1. Lấy danh sách sản phẩm [cite: 66]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/get-product</span>
+                            [cite: 72, 73]
+                        </div>
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-2">
+                            // Response Thành công [cite: 81]<br>
+                            { "error": 0, "products": {} /* dữ liệu danh sách sản phẩm */ } [cite: 83, 84]
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">2. Lấy danh sách hệ điều hành của hệ thống [cite: 92]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Mô tả: Lấy thông tin hệ điều hành dành cho dịch vụ VPS VN
+                            [cite: 93]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/get-list-os</span>
+                            [cite: 95, 96]
+                        </div>
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-2">
+                            // Response Thành công [cite: 103]<br>
+                            { "error": 0, "os-vps": {} /* dữ liệu danh sách hệ điều hành */ } [cite: 105, 106]
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">3. Lấy danh sách thời gian thuê của hệ thống [cite: 114]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Mô tả: Lấy thông tin thời gian thuê dành cho các dịch vụ
+                            và sản phẩm [cite: 116]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/get-list-billing-cycle</span>
+                            [cite: 118]
+                        </div>
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-2">
+                            // Response Thành công [cite: 126]<br>
+                            { "error": 0, "billing-cycle": {} /* dữ liệu danh sách thời gian thuê */ } [cite: 128, 129]
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">4. Lấy danh sách bang (VPS NN) của hệ thống [cite: 137]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/order/get-state</span>
+                            [cite: 140, 141]
+                        </div>
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-2">
+                            // Response Thành công [cite: 149]<br>
+                            { "error": 0, "state": {} /* dữ liệu danh sách bang của US */ } [cite: 151, 152]
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="iv-nap-tien" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">IV. Nạp tiền vào số dư tài khoản [cite: 160]</h2>
+
+                <div class="space-y-6">
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">1. Lấy danh sách tài khoản [cite: 161]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Mô tả: Lấy danh sách thông tin tài khoản của hệ thống
+                            [cite: 163]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/get-info-recharge</span>
+                            [cite: 166]
+                        </div>
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-2">
+                            // Response Thành công [cite: 173]<br>
+                            {<br>
+                            &nbsp;&nbsp;"error": 0, [cite: 175]<br>
+                            &nbsp;&nbsp;"limit": { "min": "Số tiền tối thiểu", "max": "Hạn mức tối đa" }, [cite: 176,
+                            177, 178]<br>
+                            &nbsp;&nbsp;"bankings": {} /* dữ liệu danh sách các tài khoản của hệ thống */ [cite:
+                            179]<br>
+                            } [cite: 180]
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">2. Yêu cầu nạp tiền vào số dư tài khoản [cite: 187]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Mô tả: Sau khi nhận được yêu cầu nạp tiền, hệ thống sẽ trả
+                            lại các thông tin bao gồm: Số tiền, nội dung, thời gian thực hiện, mã QR code,... [cite:
+                            190, 191] Hệ thống sẽ gửi email thông tin yêu cầu và khi nạp thành công[cite: 192, 193].</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-post">POST</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/request-recharge</span>
+                            [cite: 195]
+                        </div>
+
+                        <h4 class="font-semibold mt-4 text-sm">Cấu trúc Body [cite: 201]</h4>
+                        <table class="w-full text-sm border-collapse border border-gray-200 mt-2">
+                            <thead>
+                                <tr class="table-header">
+                                    <th class="border p-2">Tham số</th>
+                                    <th class="border p-2">Kiểu</th>
+                                    <th class="border p-2">Bắt buộc</th>
+                                    <th class="border p-2">Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border p-2">amount</td>
+                                    <td class="border p-2">long</td>
+                                    <td class="border p-2 text-center text-green-600">CÓ</td>
+                                    <td class="border p-2">Số tiền [cite: 202]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">bank-key</td>
+                                    <td class="border p-2">string</td>
+                                    <td class="border p-2 text-center text-green-600">CÓ</td>
+                                    <td class="border p-2">Được lấy từ "mục IV.1" [cite: 202]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-4">
+                            // Response Thành công [cite: 204]<br>
+                            {<br>
+                            &nbsp;&nbsp;"error": 0,<br>
+                            &nbsp;&nbsp;"message": "Yêu cầu nạp tiền vào tài khoản đại lý thành công", [cite: 207]<br>
+                            &nbsp;&nbsp;"payment_amount amount": "Số tiền", [cite: 208]<br>
+                            &nbsp;&nbsp;"payment_code": "mã giao dịch (ghi vào nội dung)", [cite: 209]<br>
+                            &nbsp;&nbsp;"payment_time": "Thời gian thực hiện", [cite: 210]<br>
+                            &nbsp;&nbsp;"qr": "Mã QR" [cite: 211]<br>
+                            } [cite: 212]
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="v-giao-dich" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">V. Giao dịch [cite: 219]</h2>
+
+                <div class="space-y-6">
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">1. Lấy danh sách giao dịch [cite: 220]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Mô tả: Thông tin bao gồm: mã giao dịch, loại, số tiền, số
+                            dư trước, số dư sau, thời gian, thông tin dịch vụ đặt hàng (nếu có).... [cite: 223]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/order/get-list-transaction</span>
+                            [cite: 226]
+                        </div>
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-2">
+                            { "error": 0, "transactions": {} /* dữ liệu danh sách các giao dịch */ } [cite: 236, 237]
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">2. Giao dịch tạo mới dịch vụ VPS VN [cite: 245]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Lưu ý: Nếu số dư tài khoản không đủ, hệ thống sẽ trả về mã
+                            lỗi. Quý khách vui lòng kiểm tra lại số dư tài khoản của mình trước khi thực hiện giao dịch.
+                            [cite: 249, 250]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-post">POST</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/order/create-order</span>
+                            [cite: 253]
+                        </div>
+
+                        <h4 class="font-semibold mt-4 text-sm">Cấu trúc Body [cite: 258]</h4>
+                        <table class="w-full text-sm border-collapse border border-gray-200 mt-2">
+                            <thead>
+                                <tr class="table-header">
+                                    <th class="border p-2">Tham số</th>
+                                    <th class="border p-2">Kiểu</th>
+                                    <th class="border p-2">Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border p-2">product-id</td>
+                                    <td class="border p-2">long</td>
+                                    <td class="border p-2">Được lấy từ "mục III.1" [cite: 259]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">billing-cycle</td>
+                                    <td class="border p-2">string</td>
+                                    <td class="border p-2">Được lấy từ "mục III.3" [cite: 259]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">OS</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Được lấy từ "mục III.2" [cite: 259]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">quantity</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Số lượng tạo mới dịch vụ (từ 1 đến 50) [cite: 259]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">addon-cpu</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Addon CPU [cite: 259]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">addon-ram</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Addon RAM [cite: 259]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">addon-disk</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Addon DISK (số chia hết cho 10) [cite: 259]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-4">
+                            // Response Thành công [cite: 261]<br>
+                            {<br>
+                            &nbsp;&nbsp;"error": 0,<br>
+                            &nbsp;&nbsp;"credit": "Số dư sau thanh toán", [cite: 265]<br>
+                            &nbsp;&nbsp;"total": "Tổng tiền đơn hàng", [cite: 266]<br>
+                            &nbsp;&nbsp;"data": [ {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"vps-id": "id của vps",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"date_create": "ngày đặt hàng",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"next_due_date": "ngày kết thúc",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"vps-status": "progressing",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"is-special": 1,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"ip": "192.168.1.1",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"username": "username",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"password": "password"<br>
+                            &nbsp;&nbsp;} ] [cite: 267, 273, 274, 275, 276, 277, 278, 279, 280]<br>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">3. Giao dịch tạo mới dịch vụ VPS NN [cite: 286]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Lưu ý: Hệ điều hành duy nhất Windows Server 2012 R2. VPS
+                            NN không có chức năng nâng cấp. [cite: 294, 295]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-post">POST</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/order/create-order-vps-nn</span>
+                            [cite: 298]
+                        </div>
+                        <h4 class="font-semibold mt-4 text-sm">Cấu trúc Body [cite: 303]</h4>
+                        <table class="w-full text-sm border-collapse border border-gray-200 mt-2">
+                            <thead>
+                                <tr class="table-header">
+                                    <th class="border p-2">Tham số</th>
+                                    <th class="border p-2">Kiểu</th>
+                                    <th class="border p-2">Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border p-2">product-id</td>
+                                    <td class="border p-2">long</td>
+                                    <td class="border p-2">Được lấy từ "mục III.1" [cite: 304]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">billing-cycle</td>
+                                    <td class="border p-2">string</td>
+                                    <td class="border p-2">Được lấy từ "mục III.3" [cite: 304]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">state</td>
+                                    <td class="border p-2">string</td>
+                                    <td class="border p-2">Được lấy từ "mục III.4" [cite: 304]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">quantity</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Số lượng tạo mới (1 - 50) [cite: 304]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">4. Giao dịch tạo mới dịch vụ Proxy [cite: 332]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Lưu ý: Đối với Proxy US bắt buộc có Bang [cite: 338]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-post">POST</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/order/create-order-proxy</span>
+                            [cite: 341]
+                        </div>
+                        <h4 class="font-semibold mt-4 text-sm">Cấu trúc Body [cite: 346]</h4>
+                        <table class="w-full text-sm border-collapse border border-gray-200 mt-2">
+                            <thead>
+                                <tr class="table-header">
+                                    <th class="border p-2">Tham số</th>
+                                    <th class="border p-2">Kiểu</th>
+                                    <th class="border p-2">Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border p-2">product-id</td>
+                                    <td class="border p-2">long</td>
+                                    <td class="border p-2">Được lấy từ "mục III.1" [cite: 347]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">billing-cycle</td>
+                                    <td class="border p-2">string</td>
+                                    <td class="border p-2">Được lấy từ "mục III.3" [cite: 347]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">state</td>
+                                    <td class="border p-2">string</td>
+                                    <td class="border p-2">Không bắt buộc. Lấy từ "mục III.4" [cite: 347]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2">quantity</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Số lượng (1 - 50) [cite: 347]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vi-vps-vn" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">VI. VPS VN [cite: 364]</h2>
+
+                <div class="space-y-6">
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">1. Lấy danh sách VPS VN [cite: 365]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/get-list-vps</span>
+                            [cite: 371, 372]
+                        </div>
+                        <h4 class="font-semibold mt-4 text-sm">Cấu trúc Body [cite: 377]</h4>
+                        <table class="w-full text-sm border-collapse border border-gray-200 mt-2">
+                            <tbody>
+                                <tr>
+                                    <td class="border p-2 font-semibold">type</td>
+                                    <td class="border p-2">string</td>
+                                    <td class="border p-2">Không BB</td>
+                                    <td class="border p-2">"dang-su-dung", "het-han", "all" [cite: 378]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2 font-semibold">qtt</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Không BB</td>
+                                    <td class="border p-2">Mặc định 30 VPS (Tối đa 300) [cite: 378]</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-2 font-semibold">page</td>
+                                    <td class="border p-2">int</td>
+                                    <td class="border p-2">Không BB</td>
+                                    <td class="border p-2">Số trang cần lấy: mặc định 0 [cite: 378]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">2. Hành động với VPS VN [cite: 391]</h3>
+                        <p class="text-sm text-gray-600 mb-2">Gửi yêu cầu đến hệ thống để thực hiện với các VPS VN đang
+                            hoạt động. Các hành động: bật, tắt, khởi động lại, hủy, kiểm tra HĐH, cài đặt lại, auto gia
+                            hạn, nâng cấp, gia hạn... [cite: 393, 394]</p>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-post">POST</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/action-vps</span>
+                            [cite: 401, 444, 465, 489]
+                        </div>
+
+                        <h4 class="font-semibold mt-4 text-sm">Các loại Action qua tham số `action`:</h4>
+                        <ul class="list-disc pl-5 text-sm space-y-2 mt-2">
+                            <li><strong>Bật/Tắt/Khởi động lại/Hủy/Auto gia hạn:</strong> `action`: "on", "off",
+                                "restart", "cancel", "on-auto-renew", "off-auto-renew". Cần `vps-id`[cite: 407].</li>
+                            <li><strong>Kiểm tra HĐH trước cài đặt lại:</strong> `action`:
+                                "check-os-when-rebuild-vps"[cite: 427]. Trả về danh sách `list-os`[cite: 435].</li>
+                            <li><strong>Xác nhận Cài đặt lại:</strong> `action`: "confirm-rebuild-vps". Cần `os-id` từ
+                                bước kiểm tra[cite: 450].</li>
+                            <li><strong>Nâng cấp:</strong> `action`: "addon-vps". Cần `addon-cpu`, `addon-ram`,
+                                `addon-disk` (chia hết cho 10)[cite: 471].</li>
+                            <li><strong>Gia hạn:</strong> `action`: "renew-vps". Cần `billing-cycle`[cite: 495].</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">8. Lấy thông tin chi tiết VPS [cite: 511]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/get-info-vps</span>
+                            [cite: 517]
+                        </div>
+                        <p class="text-sm mt-2"><strong>Body:</strong> `vps-id` (long or array). Ví dụ 1 VPS: "vps-id":
+                            1. Nhiều VPS: "vps-id": [1, 2][cite: 524].</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vii-vps-nn" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">VII. VPS NN [cite: 538]</h2>
+
+                <div class="space-y-6">
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">1. Lấy danh sách VPS NN [cite: 539]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/get-list-vps-nn</span>
+                            [cite: 545]
+                        </div>
+                        <p class="text-sm mt-2"><strong>Body:</strong> Tương tự VPS VN (`type`, `qtt`, `page`)[cite:
+                            551].</p>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">2. Hành động với VPS NN [cite: 564]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-post">POST</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/action-vps-nn</span>
+                            [cite: 573, 593, 614]
+                        </div>
+                        <p class="text-sm mt-2 mb-2">Các `action` hỗ trợ: "on", "off", "restart", "cancel",
+                            "on-auto-renew", "off-auto-renew", "confirm-rebuild-vps", "renew-vps"[cite: 579, 599, 620].
+                        </p>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">3. Lấy thông tin chi tiết VPS NN [cite: 635]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/get-info-vps-nn</span>
+                            [cite: 641]
+                        </div>
+                        <p class="text-sm mt-2"><strong>Body:</strong> `vps-id` (long or array)[cite: 647].</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="viii-proxy" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">VIII. PROXY [cite: 662]</h2>
+
+                <div class="space-y-6">
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">1. Lấy danh sách Proxy [cite: 663]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/get-list-proxy</span>
+                            [cite: 668]
+                        </div>
+                        <p class="text-sm mt-2"><strong>Body:</strong> `type` ("dang-su-dung", "het-han", "all"), `qtt`,
+                            `page`[cite: 674].</p>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">4. Hành động với Proxy [cite: 687]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-post">POST</span>
+                            <span class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/action-proxy</span>
+                            [cite: 693, 713]
+                        </div>
+                        <p class="text-sm mt-2 mb-2">Các `action` hỗ trợ: "restart", "cancel", "on-auto-renew",
+                            "off-auto-renew", "renew-vps" (yêu cầu thêm `billing-cycle`). Cần tham số `proxy-id`[cite:
+                            699, 719].</p>
+                    </div>
+
+                    <div class="p-4 border border-gray-200 rounded">
+                        <h3 class="text-lg font-semibold">5. Lấy thông tin chi tiết [cite: 733]</h3>
+                        <div class="flex items-center gap-3 my-2">
+                            <span class="method-get">GET</span>
+                            <span
+                                class="endpoint-url">https://cloudserver.h2cloud.vn/api/agency/vps/get-info-proxy</span>
+                            [cite: 739]
+                        </div>
+                        <p class="text-sm mt-2"><strong>Body:</strong> `proxy-id` (long or array). Ví dụ: "proxy-id":
+                            [1, 2][cite: 745].</p>
+                        <div class="bg-gray-800 text-gray-200 p-3 rounded text-sm font-mono mt-2">
+                            // Response Thành công [cite: 748]<br>
+                            { "error": 0, "message": "thông báo thành công", "data": [] /* danh sách chi tiết Proxy */ }
+                            [cite: 750, 751, 752]
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+
+</html>
