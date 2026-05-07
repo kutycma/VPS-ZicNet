@@ -187,25 +187,50 @@ install_apt_packages() {
         return
     fi
 
-    local packages=(
+    local base_packages=(
         php-cli php-mbstring php-xml php-curl php-zip php-mysql php-bcmath
-        unzip curl git default-mysql-client nodejs npm
+        unzip curl git
     )
-
-    if is_local_db_host && [[ "${INSTALL_DB_SERVER:-auto}" != "0" && "${INSTALL_DB_SERVER:-auto}" != "false" ]]; then
-        packages+=(mariadb-server)
-    fi
 
     log "Installing system packages"
     $SUDO apt-get update
-    DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y "${packages[@]}"
+    DEBIAN_FRONTEND=noninteractive $SUDO apt-get -f install -y || true
+    DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y "${base_packages[@]}"
 
     if is_local_db_host && [[ "${INSTALL_DB_SERVER:-auto}" != "0" && "${INSTALL_DB_SERVER:-auto}" != "false" ]]; then
+        DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y mariadb-server \
+            || warn "Could not install mariadb-server automatically."
+
         $SUDO systemctl enable --now mariadb >/dev/null 2>&1 \
             || $SUDO systemctl enable --now mysql >/dev/null 2>&1 \
             || $SUDO service mariadb start >/dev/null 2>&1 \
             || $SUDO service mysql start >/dev/null 2>&1 \
             || warn "Could not auto-start the database service."
+    fi
+
+    if ! command -v mysql >/dev/null 2>&1 && ! command -v mariadb >/dev/null 2>&1; then
+        local db_client_installed=0
+        local db_client_pkg
+        for db_client_pkg in mariadb-client default-mysql-client mysql-client; do
+            if DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y "$db_client_pkg"; then
+                db_client_installed=1
+                break
+            fi
+        done
+
+        if [[ "$db_client_installed" != "1" ]]; then
+            warn "Could not install a MySQL client package. Install mariadb-client manually if DB creation fails."
+        fi
+    fi
+
+    if ! command -v node >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y nodejs \
+            || warn "Could not install nodejs automatically."
+    fi
+
+    if ! command -v npm >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y npm \
+            || warn "npm is not available. Frontend assets will be skipped unless npm is installed."
     fi
 }
 
@@ -256,7 +281,15 @@ create_database() {
         return
     fi
 
-    require_cmd mysql
+    local mysql_binary="mysql"
+    if ! command -v "$mysql_binary" >/dev/null 2>&1; then
+        if command -v mariadb >/dev/null 2>&1; then
+            mysql_binary="mariadb"
+        else
+            fail "Missing mysql/mariadb client. Install mariadb-client or rerun without --skip-apt."
+        fi
+    fi
+
     validate_mysql_identifier "$DB_DATABASE"
     validate_mysql_identifier "$DB_USERNAME"
 
@@ -267,7 +300,7 @@ create_database() {
     local db_password_escaped
     db_password_escaped="$(sql_escape "$DB_PASSWORD")"
 
-    local mysql_cmd=(mysql)
+    local mysql_cmd=("$mysql_binary")
     local mysql_args=(-h "$DB_HOST" -P "$DB_PORT" -u "$MYSQL_ADMIN_USER" --protocol=tcp)
 
     if [[ "$MYSQL_ADMIN_USER" == "root" && -z "${MYSQL_ADMIN_PASSWORD:-}" ]]; then
