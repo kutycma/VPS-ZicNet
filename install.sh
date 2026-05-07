@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 
 NON_INTERACTIVE="${NON_INTERACTIVE:-0}"
 SKIP_APT="${SKIP_APT:-0}"
-SKIP_ASSETS="${SKIP_ASSETS:-0}"
+BUILD_ASSETS="${BUILD_ASSETS:-0}"
 INSTALL_DEV="${INSTALL_DEV:-0}"
 PHP_VERSION_TARGET="${PHP_VERSION_TARGET:-7.4}"
 PHP_BIN="${PHP_BIN:-}"
@@ -25,14 +25,14 @@ Simple fresh install:
 Options:
   --non-interactive   Use environment variables and defaults, do not prompt.
   --skip-apt          Do not install system packages with apt-get.
-  --skip-assets       Do not run npm install/build.
+  --build-assets      Run npm install/build. Default is no frontend build.
   -h, --help          Show this help.
 
 Environment variables:
   APP_URL
   DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD
   ADMIN_EMAIL ADMIN_PASSWORD
-  INSTALL_DEV WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
+  INSTALL_DEV BUILD_ASSETS WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
 EOF
 }
 
@@ -40,7 +40,8 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --non-interactive) NON_INTERACTIVE=1 ;;
         --skip-apt) SKIP_APT=1 ;;
-        --skip-assets) SKIP_ASSETS=1 ;;
+        --build-assets) BUILD_ASSETS=1 ;;
+        --skip-assets) BUILD_ASSETS=0 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
     esac
@@ -381,7 +382,7 @@ install_php_dependencies() {
 }
 
 build_assets() {
-    if [[ "$SKIP_ASSETS" == "1" || ! -f package.json ]]; then
+    if [[ "$BUILD_ASSETS" != "1" || ! -f package.json ]]; then
         return
     fi
 
@@ -404,6 +405,7 @@ install_laravel() {
     log "Running Laravel setup"
     run_artisan config:clear || true
     run_artisan cache:clear || true
+    run_artisan route:clear || true
     run_artisan view:clear || true
 
     run_artisan key:generate --force

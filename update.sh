@@ -8,7 +8,7 @@ cd "$ROOT_DIR"
 GIT_REMOTE="${GIT_REMOTE:-origin}"
 GIT_BRANCH="${GIT_BRANCH:-}"
 SKIP_DEPS="${SKIP_DEPS:-0}"
-SKIP_ASSETS="${SKIP_ASSETS:-0}"
+BUILD_ASSETS="${BUILD_ASSETS:-0}"
 SKIP_MIGRATE="${SKIP_MIGRATE:-0}"
 SKIP_BACKUP="${SKIP_BACKUP:-0}"
 INSTALL_DEV="${INSTALL_DEV:-0}"
@@ -28,14 +28,14 @@ Options:
   --branch <name>     Update from this branch instead of the current branch.
   --remote <name>     Git remote name. Default: origin.
   --skip-deps         Skip composer install.
-  --skip-assets       Skip npm install/build.
+  --build-assets      Run npm install/build. Default is no frontend build.
   --skip-migrate      Skip php artisan migrate.
   --skip-backup       Do not backup local changes before overwriting them.
   -h, --help          Show this help.
 
 Useful environment variables:
-  GIT_REMOTE GIT_BRANCH SKIP_DEPS SKIP_ASSETS SKIP_MIGRATE SKIP_BACKUP
-  INSTALL_DEV CACHE_ROUTES WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
+  GIT_REMOTE GIT_BRANCH SKIP_DEPS SKIP_MIGRATE SKIP_BACKUP
+  INSTALL_DEV BUILD_ASSETS CACHE_ROUTES WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
 EOF
 }
 
@@ -52,7 +52,8 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --skip-deps) SKIP_DEPS=1 ;;
-        --skip-assets) SKIP_ASSETS=1 ;;
+        --build-assets) BUILD_ASSETS=1 ;;
+        --skip-assets) BUILD_ASSETS=0 ;;
         --skip-migrate) SKIP_MIGRATE=1 ;;
         --skip-backup) SKIP_BACKUP=1 ;;
         -h|--help) usage; exit 0 ;;
@@ -263,7 +264,7 @@ install_php_dependencies() {
 }
 
 build_assets() {
-    if [[ "$SKIP_ASSETS" == "1" || ! -f package.json ]]; then
+    if [[ "$BUILD_ASSETS" != "1" || ! -f package.json ]]; then
         return
     fi
 
@@ -293,6 +294,7 @@ run_laravel_update() {
     fi
     run_artisan config:clear || true
     run_artisan cache:clear || true
+    run_artisan route:clear || true
     run_artisan view:clear || true
 
     if [[ "$SKIP_MIGRATE" != "1" ]]; then

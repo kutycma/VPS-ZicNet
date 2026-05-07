@@ -12,31 +12,46 @@ Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleController
 
 // Redirect root to welcome page with plans
 Route::get('/', function (\Illuminate\Http\Request $request) {
-    $groups = \App\Models\VpsPlanGroup::where('status', 'active')
-        ->orderBy('sort_order')
-        ->get();
-
     $selectedGroup = $request->query('group');
+    $groups = collect();
+    $plans = collect();
 
-    $query = \App\Models\VpsPlan::with(['provider', 'group'])
-        ->where('status', 'active')
-        ->whereHas('provider', function ($q) {
-            $q->where('status', 'active');
-        });
-
-    if ($selectedGroup) {
-        $groupModel = \App\Models\VpsPlanGroup::where('slug', $selectedGroup)->first();
-        if ($groupModel) {
-            $query->where('group_id', $groupModel->id);
+    try {
+        $requiredTables = ['vps_plan_groups', 'vps_plans', 'vps_providers'];
+        foreach ($requiredTables as $table) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable($table)) {
+                return view('welcome', compact('plans', 'groups', 'selectedGroup'));
+            }
         }
-    }
 
-    $plans = $query
-        ->orderBy('sort_order')
-        ->orderBy('type')
-        ->orderBy('selling_price')
-        ->get()
-        ->groupBy('type');
+        $groups = \App\Models\VpsPlanGroup::where('status', 'active')
+            ->orderBy('sort_order')
+            ->get();
+
+        $query = \App\Models\VpsPlan::with(['provider', 'group'])
+            ->where('status', 'active')
+            ->whereHas('provider', function ($q) {
+                $q->where('status', 'active');
+            });
+
+        if ($selectedGroup) {
+            $groupModel = \App\Models\VpsPlanGroup::where('slug', $selectedGroup)->first();
+            if ($groupModel) {
+                $query->where('group_id', $groupModel->id);
+            }
+        }
+
+        $plans = $query
+            ->orderBy('sort_order')
+            ->orderBy('type')
+            ->orderBy('selling_price')
+            ->get()
+            ->groupBy('type');
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::warning('Unable to load public VPS plans.', [
+            'message' => $e->getMessage(),
+        ]);
+    }
 
     return view('welcome', compact('plans', 'groups', 'selectedGroup'));
 })->name('home');

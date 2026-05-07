@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Setting extends Model
 {
@@ -16,8 +17,16 @@ class Setting extends Model
      */
     public static function get($key, $default = null)
     {
-        $setting = static::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
+        try {
+            if (!Schema::hasTable((new static())->getTable())) {
+                return $default;
+            }
+
+            $setting = static::where('key', $key)->first();
+            return $setting ? $setting->value : $default;
+        } catch (\Throwable $e) {
+            return $default;
+        }
     }
 
     /**
@@ -25,10 +34,18 @@ class Setting extends Model
      */
     public static function set($key, $value, $group = 'general')
     {
-        return static::updateOrCreate(
-            ['key' => $key],
-            ['value' => $value, 'group' => $group]
-        );
+        try {
+            if (!Schema::hasTable((new static())->getTable())) {
+                return null;
+            }
+
+            return static::updateOrCreate(
+                ['key' => $key],
+                ['value' => $value, 'group' => $group]
+            );
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**
@@ -36,6 +53,14 @@ class Setting extends Model
      */
     public static function getGroup($group)
     {
-        return static::where('group', $group)->pluck('value', 'key')->toArray();
+        try {
+            if (!Schema::hasTable((new static())->getTable())) {
+                return [];
+            }
+
+            return static::where('group', $group)->pluck('value', 'key')->toArray();
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 }
