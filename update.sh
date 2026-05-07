@@ -13,6 +13,9 @@ SKIP_MIGRATE="${SKIP_MIGRATE:-0}"
 SKIP_BACKUP="${SKIP_BACKUP:-0}"
 INSTALL_DEV="${INSTALL_DEV:-0}"
 CACHE_ROUTES="${CACHE_ROUTES:-0}"
+PHP_VERSION_TARGET="${PHP_VERSION_TARGET:-7.4}"
+PHP_BIN="${PHP_BIN:-}"
+PHP_READY=0
 
 usage() {
     cat <<'EOF'
@@ -32,7 +35,7 @@ Options:
 
 Useful environment variables:
   GIT_REMOTE GIT_BRANCH SKIP_DEPS SKIP_ASSETS SKIP_MIGRATE SKIP_BACKUP
-  INSTALL_DEV CACHE_ROUTES WEB_USER WEB_GROUP
+  INSTALL_DEV CACHE_ROUTES WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
 EOF
 }
 
@@ -75,6 +78,64 @@ require_cmd() {
     command -v "$1" >/dev/null 2>&1 || fail "Missing command: $1"
 }
 
+select_php_bin() {
+    local candidate
+
+    if [[ -n "$PHP_BIN" ]]; then
+        command -v "$PHP_BIN" >/dev/null 2>&1 || fail "Missing PHP binary: $PHP_BIN"
+        PHP_BIN="$(command -v "$PHP_BIN")"
+        return
+    fi
+
+    for candidate in "php${PHP_VERSION_TARGET}" php74 php \
+        "/www/server/php/74/bin/php" \
+        "/usr/bin/php${PHP_VERSION_TARGET}" \
+        "/usr/local/bin/php${PHP_VERSION_TARGET}" \
+        "/usr/local/php74/bin/php" \
+        "/opt/alt/php74/usr/bin/php"; do
+        if [[ -x "$candidate" ]]; then
+            PHP_BIN="$candidate"
+            return
+        fi
+
+        if command -v "$candidate" >/dev/null 2>&1; then
+            PHP_BIN="$(command -v "$candidate")"
+            return
+        fi
+    done
+
+    fail "Missing PHP ${PHP_VERSION_TARGET}. Install PHP ${PHP_VERSION_TARGET} first."
+}
+
+ensure_php_runtime() {
+    if [[ "$PHP_READY" == "1" ]]; then
+        return
+    fi
+
+    select_php_bin
+
+    local version minor
+    version="$("$PHP_BIN" -r 'echo PHP_VERSION;')" || fail "Cannot run PHP binary: $PHP_BIN"
+    minor="$("$PHP_BIN" -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+
+    if [[ "$minor" != "$PHP_VERSION_TARGET" ]]; then
+        fail "This project requires PHP ${PHP_VERSION_TARGET}. Current PHP is ${version} at ${PHP_BIN}. Install PHP ${PHP_VERSION_TARGET} or run with PHP_BIN=/path/to/php${PHP_VERSION_TARGET}."
+    fi
+
+    PHP_READY=1
+    log "Using PHP ${version} (${PHP_BIN})"
+}
+
+run_composer() {
+    local composer_path
+    ensure_php_runtime
+
+    composer_path="$(command -v composer 2>/dev/null || true)"
+    [[ -n "$composer_path" ]] || fail "Missing command: composer"
+
+    "$PHP_BIN" "$composer_path" "$@"
+}
+
 SUDO=""
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
     SUDO="sudo"
@@ -83,8 +144,10 @@ fi
 APP_WAS_DOWNED=0
 
 restore_app() {
-    if [[ "$APP_WAS_DOWNED" == "1" && -f artisan ]] && command -v php >/dev/null 2>&1; then
-        php artisan up >/dev/null 2>&1 || true
+    if [[ "$APP_WAS_DOWNED" == "1" && -f artisan ]]; then
+        if ensure_php_runtime >/dev/null 2>&1; then
+            "$PHP_BIN" artisan up >/dev/null 2>&1 || true
+        fi
     fi
 }
 
@@ -188,6 +251,7 @@ install_php_dependencies() {
     fi
 
     require_cmd composer
+    ensure_php_runtime
     log "Installing PHP dependencies"
 
     local composer_args=(install --prefer-dist --optimize-autoloader --no-interaction)
@@ -195,7 +259,7 @@ install_php_dependencies() {
         composer_args+=(--no-dev)
     fi
 
-    composer "${composer_args[@]}"
+    run_composer "${composer_args[@]}"
 }
 
 build_assets() {
@@ -214,14 +278,14 @@ build_assets() {
 }
 
 run_artisan() {
-    require_cmd php
-    php artisan "$@"
+    ensure_php_runtime
+    "$PHP_BIN" artisan "$@"
 }
 
 run_laravel_update() {
     [[ -f artisan ]] || return
 
-    require_cmd php
+    ensure_php_runtime
     log "Running Laravel update steps"
 
     if run_artisan down; then

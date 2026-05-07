@@ -9,6 +9,9 @@ NON_INTERACTIVE="${NON_INTERACTIVE:-0}"
 SKIP_APT="${SKIP_APT:-0}"
 SKIP_ASSETS="${SKIP_ASSETS:-0}"
 INSTALL_DEV="${INSTALL_DEV:-0}"
+PHP_VERSION_TARGET="${PHP_VERSION_TARGET:-7.4}"
+PHP_BIN="${PHP_BIN:-}"
+PHP_READY=0
 
 usage() {
     cat <<'EOF'
@@ -29,7 +32,7 @@ Environment variables:
   APP_URL
   DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD
   ADMIN_EMAIL ADMIN_PASSWORD
-  INSTALL_DEV WEB_USER WEB_GROUP
+  INSTALL_DEV WEB_USER WEB_GROUP PHP_BIN PHP_VERSION_TARGET
 EOF
 }
 
@@ -126,6 +129,79 @@ require_cmd() {
     command -v "$1" >/dev/null 2>&1 || fail "Missing command: $1"
 }
 
+select_php_bin() {
+    local candidate
+
+    if [[ -n "$PHP_BIN" ]]; then
+        command -v "$PHP_BIN" >/dev/null 2>&1 || fail "Missing PHP binary: $PHP_BIN"
+        PHP_BIN="$(command -v "$PHP_BIN")"
+        return
+    fi
+
+    for candidate in "php${PHP_VERSION_TARGET}" php74 php \
+        "/www/server/php/74/bin/php" \
+        "/usr/bin/php${PHP_VERSION_TARGET}" \
+        "/usr/local/bin/php${PHP_VERSION_TARGET}" \
+        "/usr/local/php74/bin/php" \
+        "/opt/alt/php74/usr/bin/php"; do
+        if [[ -x "$candidate" ]]; then
+            PHP_BIN="$candidate"
+            return
+        fi
+
+        if command -v "$candidate" >/dev/null 2>&1; then
+            PHP_BIN="$(command -v "$candidate")"
+            return
+        fi
+    done
+
+    fail "Missing PHP ${PHP_VERSION_TARGET}. Install PHP ${PHP_VERSION_TARGET} first."
+}
+
+ensure_php_runtime() {
+    if [[ "$PHP_READY" == "1" ]]; then
+        return
+    fi
+
+    select_php_bin
+
+    local version minor
+    version="$("$PHP_BIN" -r 'echo PHP_VERSION;')" || fail "Cannot run PHP binary: $PHP_BIN"
+    minor="$("$PHP_BIN" -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+
+    if [[ "$minor" != "$PHP_VERSION_TARGET" ]]; then
+        fail "This project requires PHP ${PHP_VERSION_TARGET}. Current PHP is ${version} at ${PHP_BIN}. Install PHP ${PHP_VERSION_TARGET} or run with PHP_BIN=/path/to/php${PHP_VERSION_TARGET}."
+    fi
+
+    PHP_READY=1
+    log "Using PHP ${version} (${PHP_BIN})"
+}
+
+ensure_php_extensions() {
+    local missing=()
+    local ext
+
+    for ext in pdo_mysql mbstring xml curl zip bcmath; do
+        if ! "$PHP_BIN" -m | grep -qiE "^${ext}$"; then
+            missing+=("$ext")
+        fi
+    done
+
+    if [[ "${#missing[@]}" -gt 0 ]]; then
+        fail "PHP ${PHP_VERSION_TARGET} is missing extensions: ${missing[*]}. Install them, for example: apt-get install php${PHP_VERSION_TARGET}-mysql php${PHP_VERSION_TARGET}-mbstring php${PHP_VERSION_TARGET}-xml php${PHP_VERSION_TARGET}-curl php${PHP_VERSION_TARGET}-zip php${PHP_VERSION_TARGET}-bcmath"
+    fi
+}
+
+run_composer() {
+    local composer_path
+    ensure_php_runtime
+
+    composer_path="$(command -v composer 2>/dev/null || true)"
+    [[ -n "$composer_path" ]] || fail "Missing command: composer"
+
+    "$PHP_BIN" "$composer_path" "$@"
+}
+
 SUDO=""
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
     SUDO="sudo"
@@ -149,9 +225,18 @@ install_apt_packages() {
     log "Installing required system packages"
     $SUDO apt-get update
     DEBIAN_FRONTEND=noninteractive $SUDO apt-get -f install -y || true
-    DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y \
-        php-cli php-mbstring php-xml php-curl php-zip php-mysql php-bcmath \
-        unzip curl git
+
+    DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y unzip curl git
+
+    local php_prefix="php${PHP_VERSION_TARGET}"
+    if apt-cache show "${php_prefix}-cli" >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y \
+            "${php_prefix}-cli" "${php_prefix}-mbstring" "${php_prefix}-xml" \
+            "${php_prefix}-curl" "${php_prefix}-zip" "${php_prefix}-mysql" \
+            "${php_prefix}-bcmath"
+    else
+        warn "${php_prefix} packages are not available from apt. Keeping existing PHP; install PHP ${PHP_VERSION_TARGET} manually if the next step fails."
+    fi
 }
 
 install_composer() {
@@ -159,7 +244,7 @@ install_composer() {
         return
     fi
 
-    require_cmd php
+    ensure_php_runtime
     require_cmd curl
 
     if [[ -n "$SUDO" ]] && ! command -v sudo >/dev/null 2>&1; then
@@ -168,16 +253,16 @@ install_composer() {
 
     log "Installing Composer"
     local expected actual
-    expected="$(php -r "copy('https://composer.github.io/installer.sig', 'php://stdout');")"
-    php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
-    actual="$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")"
+    expected="$("$PHP_BIN" -r "copy('https://composer.github.io/installer.sig', 'php://stdout');")"
+    "$PHP_BIN" -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
+    actual="$("$PHP_BIN" -r "echo hash_file('sha384', '/tmp/composer-setup.php');")"
 
     if [[ "$expected" != "$actual" ]]; then
         rm -f /tmp/composer-setup.php
         fail "Composer installer signature mismatch."
     fi
 
-    php /tmp/composer-setup.php --quiet --install-dir=/tmp --filename=composer
+    "$PHP_BIN" /tmp/composer-setup.php --quiet --install-dir=/tmp --filename=composer
     rm -f /tmp/composer-setup.php
     $SUDO mv /tmp/composer /usr/local/bin/composer
     $SUDO chmod +x /usr/local/bin/composer
@@ -211,7 +296,7 @@ set_env() {
 }
 
 test_database_connection() {
-    require_cmd php
+    ensure_php_runtime
 
     log "Checking database connection"
     DB_HOST="$DB_HOST" \
@@ -219,7 +304,7 @@ test_database_connection() {
     DB_DATABASE="$DB_DATABASE" \
     DB_USERNAME="$DB_USERNAME" \
     DB_PASSWORD="$DB_PASSWORD" \
-    php -r '
+    "$PHP_BIN" -r '
         $dsn = sprintf(
             "mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4",
             getenv("DB_HOST"),
@@ -292,7 +377,7 @@ install_php_dependencies() {
         composer_args+=(--no-dev)
     fi
 
-    composer "${composer_args[@]}"
+    run_composer "${composer_args[@]}"
 }
 
 build_assets() {
@@ -311,8 +396,8 @@ build_assets() {
 }
 
 run_artisan() {
-    require_cmd php
-    php artisan "$@"
+    ensure_php_runtime
+    "$PHP_BIN" artisan "$@"
 }
 
 install_laravel() {
@@ -348,7 +433,8 @@ main() {
     ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(env_file_value ADMIN_PASSWORD "$(random_hex)")}"
 
     install_apt_packages
-    require_cmd php
+    ensure_php_runtime
+    ensure_php_extensions
     test_database_connection
 
     prepare_env
