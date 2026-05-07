@@ -80,15 +80,36 @@ if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
     SUDO="sudo"
 fi
 
+APP_WAS_DOWNED=0
+
+restore_app() {
+    if [[ "$APP_WAS_DOWNED" == "1" && -f artisan ]] && command -v php >/dev/null 2>&1; then
+        php artisan up >/dev/null 2>&1 || true
+    fi
+}
+
+trap restore_app EXIT
+
+ensure_git_safe_directory() {
+    if git status --short >/dev/null 2>&1; then
+        return
+    fi
+
+    git config --global --add safe.directory "$ROOT_DIR" >/dev/null 2>&1 || true
+}
+
 detect_branch() {
     if [[ -n "$GIT_BRANCH" ]]; then
         return
     fi
 
     GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-    if [[ "$GIT_BRANCH" == "HEAD" ]]; then
-        fail "Repository is in detached HEAD. Rerun with: bash update.sh --branch <branch>"
+    if [[ "$GIT_BRANCH" != "HEAD" ]]; then
+        return
     fi
+
+    GIT_BRANCH="$(git symbolic-ref --quiet --short "refs/remotes/${GIT_REMOTE}/HEAD" 2>/dev/null | sed "s#^${GIT_REMOTE}/##" || true)"
+    [[ -n "$GIT_BRANCH" ]] || fail "Cannot detect branch. Rerun with: bash update.sh --branch <branch>"
 }
 
 backup_local_changes() {
@@ -123,13 +144,22 @@ sync_from_git() {
     require_cmd git
     [[ -d .git ]] || fail "This directory is not a Git repository."
 
+    ensure_git_safe_directory
     detect_branch
 
     log "Fetching latest code from ${GIT_REMOTE}/${GIT_BRANCH}"
     git fetch --prune "$GIT_REMOTE"
 
     if ! git rev-parse --verify --quiet "${GIT_REMOTE}/${GIT_BRANCH}" >/dev/null; then
-        fail "Remote branch not found: ${GIT_REMOTE}/${GIT_BRANCH}"
+        local remote_head
+        remote_head="$(git symbolic-ref --quiet --short "refs/remotes/${GIT_REMOTE}/HEAD" 2>/dev/null | sed "s#^${GIT_REMOTE}/##" || true)"
+
+        if [[ -n "$remote_head" && "$remote_head" != "$GIT_BRANCH" ]] && git rev-parse --verify --quiet "${GIT_REMOTE}/${remote_head}" >/dev/null; then
+            warn "Remote branch ${GIT_REMOTE}/${GIT_BRANCH} not found. Using ${GIT_REMOTE}/${remote_head}."
+            GIT_BRANCH="$remote_head"
+        else
+            fail "Remote branch not found: ${GIT_REMOTE}/${GIT_BRANCH}"
+        fi
     fi
 
     backup_local_changes
@@ -194,7 +224,9 @@ run_laravel_update() {
     require_cmd php
     log "Running Laravel update steps"
 
-    run_artisan down || true
+    if run_artisan down; then
+        APP_WAS_DOWNED=1
+    fi
     run_artisan config:clear || true
     run_artisan cache:clear || true
     run_artisan view:clear || true
@@ -216,6 +248,7 @@ run_laravel_update() {
 
     run_artisan queue:restart || true
     run_artisan up || true
+    APP_WAS_DOWNED=0
 }
 
 main() {

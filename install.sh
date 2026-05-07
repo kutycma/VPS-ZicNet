@@ -6,29 +6,30 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
 NON_INTERACTIVE="${NON_INTERACTIVE:-0}"
-SKIP_APT=0
-SKIP_DB_CREATE="${SKIP_DB_CREATE:-0}"
+SKIP_APT="${SKIP_APT:-0}"
 SKIP_ASSETS="${SKIP_ASSETS:-0}"
-SKIP_SEED="${SKIP_SEED:-0}"
+INSTALL_DEV="${INSTALL_DEV:-0}"
 
 usage() {
     cat <<'EOF'
 Usage: bash install.sh [options]
 
+Simple fresh install:
+  1. Enter existing database connection.
+  2. Script verifies the database connection.
+  3. Script creates a default admin account and prints it at the end.
+
 Options:
   --non-interactive   Use environment variables and defaults, do not prompt.
   --skip-apt          Do not install system packages with apt-get.
-  --skip-db-create    Do not create MySQL database/user.
   --skip-assets       Do not run npm install/build.
-  --skip-seed         Do not run database seeders.
   -h, --help          Show this help.
 
-Useful environment variables:
-  APP_NAME APP_ENV APP_DEBUG APP_URL
+Environment variables:
+  APP_URL
   DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD
-  ADMIN_NAME ADMIN_EMAIL ADMIN_PASSWORD
-  INSTALL_DB_SERVER INSTALL_DEV WEB_USER WEB_GROUP
-  MYSQL_ADMIN_USER MYSQL_ADMIN_PASSWORD  Advanced: only needed if MySQL root has a password.
+  ADMIN_EMAIL ADMIN_PASSWORD
+  INSTALL_DEV WEB_USER WEB_GROUP
 EOF
 }
 
@@ -36,9 +37,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --non-interactive) NON_INTERACTIVE=1 ;;
         --skip-apt) SKIP_APT=1 ;;
-        --skip-db-create) SKIP_DB_CREATE=1 ;;
         --skip-assets) SKIP_ASSETS=1 ;;
-        --skip-seed) SKIP_SEED=1 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
     esac
@@ -56,13 +55,6 @@ warn() {
 fail() {
     printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2
     exit 1
-}
-
-is_yes() {
-    case "${1:-}" in
-        y|Y|yes|YES|Yes|1|true|TRUE|True) return 0 ;;
-        *) return 1 ;;
-    esac
 }
 
 prompt_value() {
@@ -101,35 +93,9 @@ prompt_secret() {
         return
     fi
 
-    read -r -s -p "$label [leave blank for default]: " input
+    read -r -s -p "$label: " input
     printf '\n'
     printf -v "$var_name" '%s' "${input:-$default}"
-}
-
-prompt_yes_no() {
-    local var_name="$1"
-    local label="$2"
-    local default="$3"
-    local current="${!var_name-}"
-    local input=""
-
-    if [[ -n "$current" ]]; then
-        return
-    fi
-
-    if [[ "$NON_INTERACTIVE" == "1" || ! -t 0 ]]; then
-        printf -v "$var_name" '%s' "$default"
-        return
-    fi
-
-    if is_yes "$default"; then
-        read -r -p "$label [Y/n]: " input
-        input="${input:-yes}"
-    else
-        read -r -p "$label [y/N]: " input
-        input="${input:-no}"
-    fi
-    printf -v "$var_name" '%s' "$input"
 }
 
 env_file_value() {
@@ -160,13 +126,6 @@ require_cmd() {
     command -v "$1" >/dev/null 2>&1 || fail "Missing command: $1"
 }
 
-is_local_db_host() {
-    case "${DB_HOST:-}" in
-        localhost|127.0.0.1|::1) return 0 ;;
-        *) return 1 ;;
-    esac
-}
-
 SUDO=""
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
     SUDO="sudo"
@@ -178,60 +137,21 @@ install_apt_packages() {
     fi
 
     if ! command -v apt-get >/dev/null 2>&1; then
-        warn "apt-get not found. Skipping OS package installation."
+        warn "apt-get not found. Skipping package installation."
         return
     fi
 
     if [[ -n "$SUDO" ]] && ! command -v sudo >/dev/null 2>&1; then
-        warn "sudo not found. Skipping OS package installation."
+        warn "sudo not found. Skipping package installation."
         return
     fi
 
-    local base_packages=(
-        php-cli php-mbstring php-xml php-curl php-zip php-mysql php-bcmath
-        unzip curl git
-    )
-
-    log "Installing system packages"
+    log "Installing required system packages"
     $SUDO apt-get update
     DEBIAN_FRONTEND=noninteractive $SUDO apt-get -f install -y || true
-    DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y "${base_packages[@]}"
-
-    if is_local_db_host && [[ "${INSTALL_DB_SERVER:-auto}" != "0" && "${INSTALL_DB_SERVER:-auto}" != "false" ]]; then
-        DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y mariadb-server \
-            || warn "Could not install mariadb-server automatically."
-
-        $SUDO systemctl enable --now mariadb >/dev/null 2>&1 \
-            || $SUDO systemctl enable --now mysql >/dev/null 2>&1 \
-            || $SUDO service mariadb start >/dev/null 2>&1 \
-            || $SUDO service mysql start >/dev/null 2>&1 \
-            || warn "Could not auto-start the database service."
-    fi
-
-    if ! command -v mysql >/dev/null 2>&1 && ! command -v mariadb >/dev/null 2>&1; then
-        local db_client_installed=0
-        local db_client_pkg
-        for db_client_pkg in mariadb-client default-mysql-client mysql-client; do
-            if DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y "$db_client_pkg"; then
-                db_client_installed=1
-                break
-            fi
-        done
-
-        if [[ "$db_client_installed" != "1" ]]; then
-            warn "Could not install a MySQL client package. Install mariadb-client manually if DB creation fails."
-        fi
-    fi
-
-    if ! command -v node >/dev/null 2>&1; then
-        DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y nodejs \
-            || warn "Could not install nodejs automatically."
-    fi
-
-    if ! command -v npm >/dev/null 2>&1; then
-        DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y npm \
-            || warn "npm is not available. Frontend assets will be skipped unless npm is installed."
-    fi
+    DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y \
+        php-cli php-mbstring php-xml php-curl php-zip php-mysql php-bcmath \
+        unzip curl git
 }
 
 install_composer() {
@@ -243,7 +163,7 @@ install_composer() {
     require_cmd curl
 
     if [[ -n "$SUDO" ]] && ! command -v sudo >/dev/null 2>&1; then
-        fail "Composer is missing and sudo is required to install it into /usr/local/bin."
+        fail "Composer is missing and sudo is required to install it."
     fi
 
     log "Installing Composer"
@@ -261,84 +181,6 @@ install_composer() {
     rm -f /tmp/composer-setup.php
     $SUDO mv /tmp/composer /usr/local/bin/composer
     $SUDO chmod +x /usr/local/bin/composer
-}
-
-validate_mysql_identifier() {
-    [[ "$1" =~ ^[A-Za-z0-9_]+$ ]] || fail "Invalid MySQL identifier: $1. Use only letters, numbers and underscore."
-}
-
-sql_escape() {
-    printf '%s' "$1" | sed "s/'/''/g"
-}
-
-run_mysql_sql() {
-    local sql="$1"
-    shift
-    printf '%s\n' "$sql" | "$@"
-}
-
-create_database() {
-    if [[ "$SKIP_DB_CREATE" == "1" ]]; then
-        warn "Skipping database creation by request."
-        return
-    fi
-
-    local mysql_binary="mysql"
-    if ! command -v "$mysql_binary" >/dev/null 2>&1; then
-        if command -v mariadb >/dev/null 2>&1; then
-            mysql_binary="mariadb"
-        else
-            fail "Missing mysql/mariadb client. Install mariadb-client or rerun without --skip-apt."
-        fi
-    fi
-
-    validate_mysql_identifier "$DB_DATABASE"
-    validate_mysql_identifier "$DB_USERNAME"
-
-    MYSQL_ADMIN_USER="${MYSQL_ADMIN_USER:-root}"
-
-    log "Creating/updating MySQL database and database user"
-    local db_password_escaped
-    db_password_escaped="$(sql_escape "$DB_PASSWORD")"
-
-    local sql
-    sql="$(cat <<SQL
-CREATE DATABASE IF NOT EXISTS \`${DB_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${db_password_escaped}';
-CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'localhost' IDENTIFIED BY '${db_password_escaped}';
-ALTER USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${db_password_escaped}';
-ALTER USER '${DB_USERNAME}'@'localhost' IDENTIFIED BY '${db_password_escaped}';
-GRANT ALL PRIVILEGES ON \`${DB_DATABASE}\`.* TO '${DB_USERNAME}'@'%';
-GRANT ALL PRIVILEGES ON \`${DB_DATABASE}\`.* TO '${DB_USERNAME}'@'localhost';
-FLUSH PRIVILEGES;
-SQL
-)"
-
-    local db_created=0
-
-    if [[ -n "${MYSQL_ADMIN_PASSWORD:-}" ]]; then
-        if run_mysql_sql "$sql" "$mysql_binary" -h "$DB_HOST" -P "$DB_PORT" -u "$MYSQL_ADMIN_USER" "-p${MYSQL_ADMIN_PASSWORD}" --protocol=tcp; then
-            db_created=1
-        fi
-    elif is_local_db_host; then
-        if run_mysql_sql "$sql" "$mysql_binary" -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
-            db_created=1
-        elif command -v mariadb >/dev/null 2>&1 && run_mysql_sql "$sql" mariadb -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
-            db_created=1
-        elif command -v sudo >/dev/null 2>&1 && run_mysql_sql "$sql" sudo "$mysql_binary" -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
-            db_created=1
-        elif command -v sudo >/dev/null 2>&1 && command -v mariadb >/dev/null 2>&1 && run_mysql_sql "$sql" sudo mariadb -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
-            db_created=1
-        elif [[ -n "$SUDO" ]] && run_mysql_sql "$sql" $SUDO "$mysql_binary" -u "$MYSQL_ADMIN_USER" >/dev/null 2>&1; then
-            db_created=1
-        elif [[ -r /etc/mysql/debian.cnf ]] && run_mysql_sql "$sql" "$mysql_binary" --defaults-extra-file=/etc/mysql/debian.cnf >/dev/null 2>&1; then
-            db_created=1
-        fi
-    fi
-
-    if [[ "$db_created" != "1" ]]; then
-        fail "Cannot auto-create the database with local MySQL defaults. If MySQL has a root password, rerun with MYSQL_ADMIN_PASSWORD='your-root-password' bash install.sh. If the database already exists, rerun with --skip-db-create."
-    fi
 }
 
 env_format() {
@@ -368,15 +210,44 @@ set_env() {
     fi
 }
 
+test_database_connection() {
+    require_cmd php
+
+    log "Checking database connection"
+    DB_HOST="$DB_HOST" \
+    DB_PORT="$DB_PORT" \
+    DB_DATABASE="$DB_DATABASE" \
+    DB_USERNAME="$DB_USERNAME" \
+    DB_PASSWORD="$DB_PASSWORD" \
+    php -r '
+        $dsn = sprintf(
+            "mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4",
+            getenv("DB_HOST"),
+            getenv("DB_PORT"),
+            getenv("DB_DATABASE")
+        );
+
+        try {
+            new PDO($dsn, getenv("DB_USERNAME"), getenv("DB_PASSWORD"), [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_TIMEOUT => 5,
+            ]);
+        } catch (Throwable $e) {
+            fwrite(STDERR, "Database connection failed: " . $e->getMessage() . PHP_EOL);
+            exit(1);
+        }
+    ' || fail "Cannot connect to database. Please check DB host, database name, username and password."
+}
+
 prepare_env() {
     if [[ ! -f .env ]]; then
-        log "Creating .env from .env.example"
+        log "Creating .env"
         cp .env.example .env
     fi
 
-    set_env APP_NAME "$APP_NAME"
-    set_env APP_ENV "$APP_ENV"
-    set_env APP_DEBUG "$APP_DEBUG"
+    set_env APP_NAME "${APP_NAME:-VPS ZicNet}"
+    set_env APP_ENV "${APP_ENV:-production}"
+    set_env APP_DEBUG "${APP_DEBUG:-false}"
     set_env APP_URL "$APP_URL"
     set_env LOG_CHANNEL "stack"
     set_env LOG_LEVEL "${LOG_LEVEL:-warning}"
@@ -393,7 +264,7 @@ prepare_env() {
     set_env SESSION_DRIVER "${SESSION_DRIVER:-file}"
     set_env FILESYSTEM_DRIVER "${FILESYSTEM_DRIVER:-local}"
 
-    set_env ADMIN_NAME "$ADMIN_NAME"
+    set_env ADMIN_NAME "${ADMIN_NAME:-Administrator}"
     set_env ADMIN_EMAIL "$ADMIN_EMAIL"
     set_env ADMIN_PASSWORD "$ADMIN_PASSWORD"
 
@@ -417,7 +288,7 @@ install_php_dependencies() {
     log "Installing PHP dependencies"
 
     local composer_args=(install --prefer-dist --optimize-autoloader --no-interaction)
-    if [[ "${INSTALL_DEV:-0}" != "1" ]]; then
+    if [[ "$INSTALL_DEV" != "1" ]]; then
         composer_args+=(--no-dev)
     fi
 
@@ -425,11 +296,7 @@ install_php_dependencies() {
 }
 
 build_assets() {
-    if [[ "$SKIP_ASSETS" == "1" ]]; then
-        return
-    fi
-
-    if [[ ! -f package.json ]]; then
+    if [[ "$SKIP_ASSETS" == "1" || ! -f package.json ]]; then
         return
     fi
 
@@ -438,7 +305,7 @@ build_assets() {
         return
     fi
 
-    log "Installing and building frontend assets"
+    log "Building frontend assets"
     npm install
     npm run production
 }
@@ -457,53 +324,35 @@ install_laravel() {
     run_artisan key:generate --force
     run_artisan migrate --force
 
-    if [[ "$SKIP_SEED" != "1" ]]; then
-        export ADMIN_NAME ADMIN_EMAIL ADMIN_PASSWORD
-        run_artisan db:seed --force
-    fi
+    export ADMIN_NAME="${ADMIN_NAME:-Administrator}" ADMIN_EMAIL ADMIN_PASSWORD
+    run_artisan db:seed --force
 
     run_artisan storage:link || true
-
     run_artisan config:cache
     run_artisan view:cache
     run_artisan event:cache || true
-
-    if [[ "${CACHE_ROUTES:-0}" == "1" ]]; then
-        run_artisan route:cache || warn "route:cache failed. This app contains a closure route by default."
-    else
-        warn "Skipping route:cache because routes/web.php contains a closure route."
-    fi
-
     run_artisan queue:restart || true
 }
 
 main() {
-    log "VPS ZicNet fresh installer"
-
-    prompt_value APP_NAME "App name" "$(env_file_value APP_NAME "VPS ZicNet")"
-    prompt_value APP_ENV "App environment" "$(env_file_value APP_ENV "production")"
-    prompt_value APP_DEBUG "App debug" "$(env_file_value APP_DEBUG "false")"
-    prompt_value APP_URL "App URL" "$(env_file_value APP_URL "http://127.0.0.1")"
+    log "VPS ZicNet installer"
 
     prompt_value DB_HOST "Database host" "$(env_file_value DB_HOST "127.0.0.1")"
     prompt_value DB_PORT "Database port" "$(env_file_value DB_PORT "3306")"
     prompt_value DB_DATABASE "Database name" "$(env_file_value DB_DATABASE "vps_zicnet")"
-    prompt_value DB_USERNAME "Database user" "$(env_file_value DB_USERNAME "vps_zicnet")"
-    prompt_secret DB_PASSWORD "Database password" "$(env_file_value DB_PASSWORD "$(random_hex)")"
+    prompt_value DB_USERNAME "Database username" "$(env_file_value DB_USERNAME "vps_zicnet")"
+    prompt_secret DB_PASSWORD "Database password" "$(env_file_value DB_PASSWORD "")"
+
+    APP_URL="${APP_URL:-$(env_file_value APP_URL "http://127.0.0.1")}"
+    ADMIN_EMAIL="${ADMIN_EMAIL:-$(env_file_value ADMIN_EMAIL "admin@zicnet.vn")}"
+    ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(env_file_value ADMIN_PASSWORD "$(random_hex)")}"
 
     install_apt_packages
-    install_composer
     require_cmd php
-    require_cmd composer
-
-    create_database
-
-    log "Database is ready. Create the admin account"
-    prompt_value ADMIN_NAME "Admin name" "$(env_file_value ADMIN_NAME "Administrator")"
-    prompt_value ADMIN_EMAIL "Admin email" "$(env_file_value ADMIN_EMAIL "admin@zicnet.vn")"
-    prompt_secret ADMIN_PASSWORD "Admin password" "$(env_file_value ADMIN_PASSWORD "$(random_hex)")"
+    test_database_connection
 
     prepare_env
+    install_composer
     prepare_directories
     install_php_dependencies
     build_assets
@@ -512,12 +361,8 @@ main() {
     printf '\n'
     log "Install completed"
     printf 'URL: %s\n' "$APP_URL"
-    printf 'Database: %s@%s:%s/%s\n' "$DB_USERNAME" "$DB_HOST" "$DB_PORT" "$DB_DATABASE"
-    if [[ "$SKIP_SEED" != "1" ]]; then
-        printf 'Admin: %s\n' "$ADMIN_EMAIL"
-        printf 'Admin password: %s\n' "$ADMIN_PASSWORD"
-    fi
-    printf '\nRun this again safely for normal updates; it uses migrate, not migrate:fresh.\n'
+    printf 'Admin email: %s\n' "$ADMIN_EMAIL"
+    printf 'Admin password: %s\n' "$ADMIN_PASSWORD"
 }
 
 main "$@"
