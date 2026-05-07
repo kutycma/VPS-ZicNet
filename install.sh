@@ -386,30 +386,26 @@ run_artisan() {
 prune_legacy_migrations() {
     log "Removing legacy duplicate migrations"
 
-    local migration file keep
-    local keep_files=(
-        "2014_10_12_000000_create_platform_tables.php"
-        "2026_04_03_000000_create_vps_catalog_tables.php"
-        "2026_04_03_000100_create_vps_service_tables.php"
-        "2026_04_03_000200_create_billing_tables.php"
-        "2026_04_03_000300_create_support_tables.php"
-        "2026_04_03_000400_create_settings_and_theme_tables.php"
-        "2026_04_03_000500_create_coupon_tables.php"
-    )
+    local migration file
 
-    find database/migrations -maxdepth 1 -type f -name '*.php' | while IFS= read -r migration; do
+    for migration in database/migrations/*.php; do
+        [[ -f "$migration" ]] || continue
         file="$(basename "$migration")"
-        keep=0
-        for expected in "${keep_files[@]}"; do
-            if [[ "$file" == "$expected" ]]; then
-                keep=1
-                break
-            fi
-        done
 
-        if [[ "$keep" == "0" ]]; then
-            rm -f "$migration"
-        fi
+        case "$file" in
+            2014_10_12_000000_create_platform_tables.php|\
+            2019_12_14_000001_create_personal_access_tokens_table.php|\
+            2026_04_03_000000_create_vps_catalog_tables.php|\
+            2026_04_03_000100_create_vps_service_tables.php|\
+            2026_04_03_000200_create_billing_tables.php|\
+            2026_04_03_000300_create_support_tables.php|\
+            2026_04_03_000400_create_settings_and_theme_tables.php|\
+            2026_04_03_000500_create_coupon_tables.php)
+                ;;
+            *)
+                rm -f "$migration"
+                ;;
+        esac
     done
 }
 
