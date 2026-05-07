@@ -200,6 +200,17 @@ backup_local_changes() {
     fi
 }
 
+clean_untracked_files() {
+    log "Cleaning untracked files while keeping server runtime files"
+
+    git clean -fd \
+        -e .env \
+        -e public/.user.ini \
+        -e public/.user.ini/ \
+        -e public/user.ini \
+        -e public/user.ini/
+}
+
 sync_from_git() {
     require_cmd git
     [[ -d .git ]] || fail "This directory is not a Git repository."
@@ -227,7 +238,7 @@ sync_from_git() {
     log "Overwriting local code with ${GIT_REMOTE}/${GIT_BRANCH}"
     git checkout -f -B "$GIT_BRANCH" "${GIT_REMOTE}/${GIT_BRANCH}"
     git reset --hard "${GIT_REMOTE}/${GIT_BRANCH}"
-    git clean -fd
+    clean_untracked_files
 }
 
 prepare_directories() {
