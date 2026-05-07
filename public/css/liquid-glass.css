@@ -859,6 +859,74 @@ body.liquid-glass-basic .alert {
     backdrop-filter: none !important;
 }
 
+.liquid-glass-focus-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1028;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(14, 22, 38, 0.28);
+    -webkit-backdrop-filter: blur(5px) saturate(82%);
+    backdrop-filter: blur(5px) saturate(82%);
+    transition: opacity 0.18s ease;
+}
+
+body.liquid-glass-focus-mode .liquid-glass-focus-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+body.liquid-glass-focus-mode .main-sidebar,
+body.liquid-glass-focus-mode .main-footer {
+    filter: blur(3px);
+    opacity: 0.56;
+    pointer-events: none;
+    transition: filter 0.18s ease, opacity 0.18s ease;
+}
+
+body.liquid-glass-focus-mode .main-header .navbar-nav > .nav-item:not(.liquid-glass-focus-target) {
+    filter: blur(3px);
+    opacity: 0.42;
+    pointer-events: none;
+    transition: filter 0.18s ease, opacity 0.18s ease;
+}
+
+body.liquid-glass-focus-mode .liquid-glass-focus-target {
+    position: relative;
+    z-index: 1055 !important;
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+body.liquid-glass-focus-mode .liquid-glass-focus-target > .dropdown-menu,
+body.liquid-glass-focus-mode .dropdown-menu.show {
+    z-index: 1060 !important;
+    opacity: 1 !important;
+    filter: none !important;
+    background: rgba(255, 255, 255, 0.88) !important;
+    border: 1px solid rgba(255, 255, 255, 0.72) !important;
+    box-shadow: 0 24px 70px rgba(18, 23, 38, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.74) !important;
+}
+
+body.liquid-glass-app .modal-backdrop.show,
+body.liquid-glass-admin .modal-backdrop.show,
+body.liquid-glass-client .modal-backdrop.show,
+body.liquid-glass-basic .modal-backdrop.show,
+body.liquid-glass-auth .modal-backdrop.show {
+    opacity: 1 !important;
+    background: rgba(14, 22, 38, 0.30) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(82%);
+    backdrop-filter: blur(5px) saturate(82%);
+}
+
+body.liquid-glass-app .swal2-container.swal2-backdrop-show,
+body.liquid-glass-auth .swal2-container.swal2-backdrop-show,
+body.liquid-glass-welcome .swal2-container.swal2-backdrop-show {
+    background: rgba(14, 22, 38, 0.30) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(82%);
+    backdrop-filter: blur(5px) saturate(82%);
+}
+
 body.liquid-glass-app a:focus-visible,
 body.liquid-glass-app button:focus-visible,
 body.liquid-glass-app .form-control:focus-visible,
