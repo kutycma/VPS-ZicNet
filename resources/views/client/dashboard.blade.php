@@ -2,7 +2,7 @@
 @section('title', __('client.dashboard'))
 @section('page_title', __('client.dashboard'))
 @section('content')
-<div class="row">
+<div class="row lg-stagger">
 
 @php
     $noticePinnedActive = \App\Models\Setting::get('notice_pinned_active');
@@ -16,7 +16,7 @@
 @if($noticePinnedActive == '1' && !empty($noticePinnedText))
     <div class="col-12 mb-3">
         <div class="alert alert-info" style="border-radius:10px; background: linear-gradient(to right, #eff6ff, #dbeafe); color: #1e40af; border: 1px solid #bfdbfe;">
-            <i class="fas fa-bullhorn mr-2"></i> {!! $noticePinnedText !!}
+            <i class="fas fa-bullhorn mr-2"></i> {!! strip_tags($noticePinnedText, '<b><strong><i><em><a><br><u>') !!}
         </div>
     </div>
 @endif
@@ -48,7 +48,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row lg-stagger">
     <div class="col-md-6">
         <div class="card"><div class="card-header"><h3 class="card-title"><i class="fas fa-hdd mr-2"></i>{{ __('client.recent_vps') }}</h3></div>
         <div class="card-body table-responsive p-0">
@@ -79,7 +79,7 @@
         if (hideNotice !== popupHash) {
             Swal.fire({
                 title: '<i class="fas fa-bell text-warning"></i> {{ __("client.notification") }}',
-                html: `{!! addslashes(str_replace("\n", "", nl2br(trim($noticePopupText)))) !!}`,
+                html: `{!! addslashes(str_replace("\n", "", nl2br(e(trim($noticePopupText))))) !!}`,
                 showCancelButton: true,
                 confirmButtonText: '{{ __("client.understood") }}',
                 cancelButtonText: '{{ __("client.dont_show_again") }}',

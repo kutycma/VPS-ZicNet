@@ -7,6 +7,8 @@
     <title>@yield('title', __('client.dashboard')) - {{ config('app.name') }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
@@ -230,13 +232,13 @@
                 @endif
                 
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" style="border-radius:10px; border:none; background:linear-gradient(135deg, var(--theme-success, #10b981), var(--theme-success-dark, #059669)); color:#fff;">
+                    <div class="alert alert-success alert-dismissible fade show lg-auto-dismiss" style="border-radius:10px; border:none; background:linear-gradient(135deg, var(--theme-success, #10b981), var(--theme-success-dark, #059669)); color:#fff;">
                         <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
                         <button type="button" class="close" data-dismiss="alert"><span style="color:#fff">&times;</span></button>
                     </div>
                 @endif
                 @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" style="border-radius:10px; border:none;">
+                    <div class="alert alert-danger alert-dismissible fade show lg-auto-dismiss" style="border-radius:10px; border:none;">
                         <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
                         <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
                     </div>
@@ -259,6 +261,26 @@
 <script>
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
     
+    // ── Page-enter loading bar ──
+    (function() {
+        var bar = document.createElement('div');
+        bar.className = 'lg-loading-bar';
+        document.body.appendChild(bar);
+        bar.addEventListener('animationend', function() { bar.remove(); });
+    })();
+
+    // ── Link-click loading bar for smooth navigation feel ──
+    document.addEventListener('click', function(e) {
+        var a = e.target.closest('a[href]');
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript') || a.target === '_blank' || a.hasAttribute('data-toggle')) return;
+        var bar = document.createElement('div');
+        bar.className = 'lg-loading-bar';
+        bar.style.animationDuration = '1.5s';
+        document.body.appendChild(bar);
+    });
+
     @if(session('resent'))
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
