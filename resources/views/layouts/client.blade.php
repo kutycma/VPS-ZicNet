@@ -106,15 +106,15 @@
                     @else
                     <i class="fas fa-user-circle" style="font-size:1.4rem;"></i>
                     @endauth
-                    <span class="d-none d-sm-inline" style="font-weight:600; color:var(--theme-text-heading, #1e293b);">{{ Auth::check() ? Auth::user()->name : __('client.guest') }}</span>
+                    <span class="d-none d-sm-inline" style="font-weight:600; color:var(--lg-ink, #f5f5f7);">{{ Auth::check() ? Auth::user()->name : __('client.guest') }}</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" style="border-radius:12px; border:none; box-shadow: 0 8px 25px rgba(0,0,0,0.12); padding:8px; min-width:220px;">
                     @auth
-                    <div style="padding:12px 16px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #f1f5f9; margin-bottom:6px;">
+                        <div style="padding:12px 16px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:6px;">
                         <img src="{{ Auth::user()->getAvatarUrl(64) }}" alt="avatar" class="user-avatar-dropdown">
                         <div>
-                            <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">{{ Auth::user()->name }}</div>
-                            <div style="font-size:0.78rem; color:#94a3b8;">{{ Auth::user()->email }}</div>
+                            <div style="font-weight:700; color:#f5f5f7; font-size:0.95rem;">{{ Auth::user()->name }}</div>
+                            <div style="font-size:0.78rem; color:#8e8e93;">{{ Auth::user()->email }}</div>
                         </div>
                     </div>
                     <a class="dropdown-item" href="{{ route('client.profile') }}" style="border-radius:8px; padding:8px 14px;"><i class="fas fa-user mr-2" style="width:18px; color:#6366f1;"></i> {{ __('client.profile') }}</a>
@@ -143,8 +143,8 @@
             <div class="user-panel-sidebar" style="padding:15px 10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.06);">
                 <img src="{{ Auth::user()->getAvatarUrl(128) }}" alt="avatar" class="user-avatar-sidebar">
                 <div class="user-panel-text">
-                    <div style="color:#1e293b; font-weight:700; font-size:1rem;">{{ Auth::user()->name }}</div>
-                    <div style="color:#6366f1; font-weight:600; font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ Auth::user()->email }}</div>
+                <div style="color:#f5f5f7; font-weight:700; font-size:1rem;">{{ Auth::user()->name }}</div>
+                <div style="color:#64d2ff; font-weight:600; font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ Auth::user()->email }}</div>
                 </div>
             </div>
             @endauth
@@ -213,7 +213,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1 class="m-0" style="font-weight:700; color:var(--theme-text-heading, #1e293b);">@yield('page_title', __('client.dashboard'))</h1>
+                        <h1 class="m-0" style="font-weight:700; color:var(--lg-ink, #f5f5f7);">@yield('page_title', __('client.dashboard'))</h1>
                     </div>
                 </div>
             </div>
